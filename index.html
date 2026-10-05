@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>TE by Nu - Monitoring Transaksi Energi</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     * {
@@ -114,6 +117,7 @@
       height: 100%;
       width: 0%;
       background: #007c91;
+      transition: width .3s ease;
     }
 
     .panel {
@@ -132,7 +136,8 @@
       color: #475467;
     }
 
-    input, select {
+    input,
+    select {
       width: 100%;
       padding: 11px;
       border: 1px solid #d0d5dd;
@@ -213,8 +218,15 @@
       color: #667085;
     }
 
+    .status {
+      margin-top: 15px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
     @media (max-width: 650px) {
-      .cards, .row {
+      .cards,
+      .row {
         grid-template-columns: 1fr;
       }
 
@@ -237,14 +249,28 @@
 </header>
 
 <nav>
-  <button class="tab active" onclick="bukaHalaman('dashboard', this)">Dashboard</button>
-  <button class="tab" onclick="bukaHalaman('entri', this)">Entri Harian</button>
-  <button class="tab" onclick="bukaHalaman('target', this)">Pengaturan Target</button>
+  <button class="tab active"
+          onclick="bukaHalaman('dashboard', this)">
+    Dashboard
+  </button>
+
+  <button class="tab"
+          onclick="bukaHalaman('entri', this)">
+    Entri Harian
+  </button>
+
+  <button class="tab"
+          onclick="bukaHalaman('target', this)">
+    Pengaturan Target
+  </button>
 </nav>
 
 <main>
 
-  <!-- DASHBOARD -->
+  <!-- =========================
+       DASHBOARD
+  ========================== -->
+
   <section id="dashboard" class="page active">
 
     <h2>Dashboard Monitoring</h2>
@@ -252,34 +278,47 @@
     <div class="cards">
 
       <div class="card">
+
         <small>Target P2TL 2026</small>
-        <h3>849.833 kWh</h3>
+
+        <h3 id="targetP2TLDisplay">
+          0 kWh
+        </h3>
 
         <div class="progress">
           <div id="progressP2TL"></div>
         </div>
 
         <p class="note" id="realisasiP2TL">
-          Realisasi sejak 5 Oktober 2026
+          Memuat realisasi...
         </p>
+
       </div>
 
+
       <div class="card">
+
         <small>Target Ganti kWh Meter 2026</small>
-        <h3>2.310 pelanggan</h3>
+
+        <h3 id="targetMeterDisplay">
+          0 pelanggan
+        </h3>
 
         <div class="progress">
           <div id="progressMeter"></div>
         </div>
 
         <p class="note" id="realisasiMeter">
-          Realisasi sejak 5 Oktober 2026
+          Memuat realisasi...
         </p>
+
       </div>
 
     </div>
 
+
     <div class="panel">
+
       <h3>P2TL — Target vs Realisasi</h3>
 
       <div class="periode">
@@ -289,11 +328,14 @@
       </div>
 
       <div class="chart-placeholder">
-        Grafik P2TL akan mengambil data otomatis dari Supabase.
+        Grafik P2TL akan kita aktifkan setelah data database terbaca.
       </div>
+
     </div>
 
+
     <div class="panel">
+
       <h3>Ganti kWh Meter — Target vs Realisasi</h3>
 
       <div class="periode">
@@ -303,14 +345,18 @@
       </div>
 
       <div class="chart-placeholder">
-        Grafik Ganti kWh Meter akan mengambil data otomatis dari Supabase.
+        Grafik Ganti kWh Meter akan kita aktifkan setelah data database terbaca.
       </div>
+
     </div>
 
   </section>
 
 
-  <!-- ENTRI HARIAN -->
+  <!-- =========================
+       ENTRI HARIAN
+  ========================== -->
+
   <section id="entri" class="page">
 
     <h2>Entri Realisasi Harian</h2>
@@ -318,23 +364,47 @@
     <div class="panel">
 
       <label>Tanggal</label>
-      <input type="date" id="tanggal">
+
+      <input
+        type="date"
+        id="tanggal"
+      >
+
 
       <div class="row">
 
         <div>
+
           <label>Realisasi P2TL</label>
-          <input type="number" id="p2tlKwh" placeholder="kWh">
+
+          <input
+            type="number"
+            id="p2tlKwh"
+            placeholder="kWh"
+          >
+
         </div>
 
+
         <div>
+
           <label>Ganti kWh Meter</label>
-          <input type="number" id="gantiMeter" placeholder="Jumlah pelanggan">
+
+          <input
+            type="number"
+            id="gantiMeter"
+            placeholder="Jumlah pelanggan"
+          >
+
         </div>
 
       </div>
 
-      <h3 style="margin:10px 0 15px;">Detail Temuan P2TL</h3>
+
+      <h3 style="margin:10px 0 15px;">
+        Detail Temuan P2TL
+      </h3>
+
 
       <div id="daftarTemuan">
 
@@ -343,23 +413,54 @@
           <div class="row">
 
             <div>
+
               <label>Jenis Temuan</label>
-              <input type="text" class="jenisTemuan" placeholder="Contoh: P1">
+
+              <input
+                type="text"
+                class="jenisTemuan"
+                placeholder="Contoh: P1"
+              >
+
             </div>
 
+
             <div>
+
               <label>Tarif</label>
-              <input type="text" class="tarif" placeholder="Contoh: R1">
+
+              <input
+                type="text"
+                class="tarif"
+                placeholder="Contoh: R1"
+              >
+
             </div>
 
+
             <div>
+
               <label>Daya</label>
-              <input type="text" class="daya" placeholder="Contoh: 1300 VA">
+
+              <input
+                type="text"
+                class="daya"
+                placeholder="Contoh: 1300 VA"
+              >
+
             </div>
 
+
             <div>
+
               <label>Jumlah Pelanggan</label>
-              <input type="number" class="jumlahPelanggan" placeholder="0">
+
+              <input
+                type="number"
+                class="jumlahPelanggan"
+                placeholder="0"
+              >
+
             </div>
 
           </div>
@@ -368,26 +469,40 @@
 
       </div>
 
-      <button class="secondary" onclick="tambahTemuan()">
+
+      <button
+        class="secondary"
+        onclick="tambahTemuan()"
+      >
         + Tambah Temuan
       </button>
 
+
       <br><br>
 
-      <button class="primary" onclick="simpanHarian()">
+
+      <button
+        class="primary"
+        onclick="simpanHarian()"
+      >
         Simpan Realisasi Harian
       </button>
 
-      <p class="note">
-        Data mulai dicatat sejak 5 Oktober 2026.
-      </p>
+
+      <div
+        class="status"
+        id="statusSimpan"
+      ></div>
 
     </div>
 
   </section>
 
 
-  <!-- TARGET -->
+  <!-- =========================
+       TARGET TAHUNAN
+  ========================== -->
+
   <section id="target" class="page">
 
     <h2>Pengaturan Target Tahunan</h2>
@@ -395,17 +510,42 @@
     <div class="panel">
 
       <label>Tahun</label>
-      <input type="number" id="tahunTarget" value="2026">
+
+      <input
+        type="number"
+        id="tahunTarget"
+        value="2026"
+      >
+
 
       <label>Target P2TL (kWh)</label>
-      <input type="number" id="targetP2TL" value="849833">
+
+      <input
+        type="number"
+        id="targetP2TL"
+      >
+
 
       <label>Target Ganti kWh Meter (pelanggan)</label>
-      <input type="number" id="targetMeter" value="2310">
 
-      <button class="primary" onclick="updateTarget()">
+      <input
+        type="number"
+        id="targetMeter"
+      >
+
+
+      <button
+        class="primary"
+        onclick="updateTarget()"
+      >
         Update Target
       </button>
+
+
+      <div
+        class="status"
+        id="statusTarget"
+      ></div>
 
     </div>
 
@@ -413,76 +553,699 @@
 
 </main>
 
+
 <script>
-  function bukaHalaman(id, tombol) {
-    document.querySelectorAll(".page").forEach(page => {
-      page.classList.remove("active");
-    });
 
-    document.querySelectorAll(".tab").forEach(tab => {
-      tab.classList.remove("active");
-    });
+  /* =========================
+     SUPABASE
+  ========================== */
 
-    document.getElementById(id).classList.add("active");
-    tombol.classList.add("active");
+  const SUPABASE_URL =
+    'https://xwjcpmxgsjjbrphbiipq.supabase.co';
+
+  const SUPABASE_KEY =
+    'sb_publishable_spj0cvuxeqTxqyk__WQFmw_MfPQw1aJ';
+
+  const db =
+    supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+
+  /* =========================
+     FORMAT ANGKA
+  ========================== */
+
+  function formatAngka(angka) {
+
+    return Number(angka || 0)
+      .toLocaleString('id-ID');
+
   }
 
-  function tambahTemuan() {
-    const daftar = document.getElementById("daftarTemuan");
 
-    const item = document.createElement("div");
+  /* =========================
+     NAVIGASI
+  ========================== */
+
+  function bukaHalaman(id, tombol) {
+
+    document
+      .querySelectorAll(".page")
+      .forEach(page => {
+
+        page.classList.remove("active");
+
+      });
+
+
+    document
+      .querySelectorAll(".tab")
+      .forEach(tab => {
+
+        tab.classList.remove("active");
+
+      });
+
+
+    document
+      .getElementById(id)
+      .classList.add("active");
+
+
+    tombol.classList.add("active");
+
+  }
+
+
+  /* =========================
+     TAMBAH TEMUAN
+  ========================== */
+
+  function tambahTemuan() {
+
+    const daftar =
+      document.getElementById("daftarTemuan");
+
+
+    const item =
+      document.createElement("div");
+
+
     item.className = "temuan";
 
+
     item.innerHTML = `
+
       <div class="row">
 
         <div>
+
           <label>Jenis Temuan</label>
-          <input type="text" class="jenisTemuan" placeholder="Contoh: P1">
+
+          <input
+            type="text"
+            class="jenisTemuan"
+            placeholder="Contoh: P1"
+          >
+
         </div>
 
+
         <div>
+
           <label>Tarif</label>
-          <input type="text" class="tarif" placeholder="Contoh: R1">
+
+          <input
+            type="text"
+            class="tarif"
+            placeholder="Contoh: R1"
+          >
+
         </div>
 
+
         <div>
+
           <label>Daya</label>
-          <input type="text" class="daya" placeholder="Contoh: 1300 VA">
+
+          <input
+            type="text"
+            class="daya"
+            placeholder="Contoh: 1300 VA"
+          >
+
         </div>
 
+
         <div>
+
           <label>Jumlah Pelanggan</label>
-          <input type="number" class="jumlahPelanggan" placeholder="0">
+
+          <input
+            type="number"
+            class="jumlahPelanggan"
+            placeholder="0"
+          >
+
         </div>
 
       </div>
 
-      <button class="secondary" onclick="this.parentElement.remove()">
+
+      <button
+        class="secondary"
+        onclick="this.parentElement.remove()"
+      >
         Hapus Temuan
       </button>
+
     `;
 
+
     daftar.appendChild(item);
+
   }
 
-  function simpanHarian() {
-    alert("Tampilan sudah siap. Berikutnya kita sambungkan tombol ini ke Supabase.");
+
+  /* =========================
+     AMBIL TARGET
+  ========================== */
+
+  async function ambilTarget() {
+
+    const { data, error } =
+      await db
+        .from('target_tahunan')
+        .select('*')
+        .eq('tahun', 2026)
+        .limit(1);
+
+
+    if (error) {
+
+      console.error(
+        "Gagal membaca target:",
+        error
+      );
+
+      return;
+
+    }
+
+
+    if (!data || data.length === 0) {
+
+      return;
+
+    }
+
+
+    const target = data[0];
+
+
+    const p2tl =
+      Number(target.p2tl_target_kwh || 0);
+
+
+    const meter =
+      Number(target.ganti_meter_target || 0);
+
+
+    document
+      .getElementById("targetP2TLDisplay")
+      .textContent =
+      formatAngka(p2tl) + " kWh";
+
+
+    document
+      .getElementById("targetMeterDisplay")
+      .textContent =
+      formatAngka(meter) + " pelanggan";
+
+
+    document
+      .getElementById("targetP2TL")
+      .value = p2tl;
+
+
+    document
+      .getElementById("targetMeter")
+      .value = meter;
+
   }
 
-  function updateTarget() {
-    alert("Berikutnya target ini akan disimpan langsung ke Supabase.");
+
+  /* =========================
+     AMBIL REALISASI
+  ========================== */
+
+  async function ambilRealisasi() {
+
+    const { data, error } =
+      await db
+        .from('p2tl_harian')
+        .select('*');
+
+
+    if (error) {
+
+      console.error(
+        "Gagal membaca realisasi:",
+        error
+      );
+
+      document
+        .getElementById("realisasiP2TL")
+        .textContent =
+        "Data belum dapat dibaca";
+
+
+      document
+        .getElementById("realisasiMeter")
+        .textContent =
+        "Data belum dapat dibaca";
+
+
+      return;
+
+    }
+
+
+    let totalP2TL = 0;
+
+    let totalMeter = 0;
+
+
+    (data || []).forEach(row => {
+
+      totalP2TL +=
+        Number(row.p2tl_kwh || 0);
+
+
+      totalMeter +=
+        Number(row.ganti_meter || 0);
+
+    });
+
+
+    document
+      .getElementById("realisasiP2TL")
+      .textContent =
+      "Realisasi: " +
+      formatAngka(totalP2TL) +
+      " kWh";
+
+
+    document
+      .getElementById("realisasiMeter")
+      .textContent =
+      "Realisasi: " +
+      formatAngka(totalMeter) +
+      " pelanggan";
+
+
+    const targetP2TL =
+      Number(
+        document
+          .getElementById("targetP2TL")
+          .value || 0
+      );
+
+
+    const targetMeter =
+      Number(
+        document
+          .getElementById("targetMeter")
+          .value || 0
+      );
+
+
+    let persenP2TL = 0;
+
+    let persenMeter = 0;
+
+
+    if (targetP2TL > 0) {
+
+      persenP2TL =
+        (totalP2TL / targetP2TL) * 100;
+
+    }
+
+
+    if (targetMeter > 0) {
+
+      persenMeter =
+        (totalMeter / targetMeter) * 100;
+
+    }
+
+
+    document
+      .getElementById("progressP2TL")
+      .style.width =
+      Math.min(persenP2TL, 100) + "%";
+
+
+    document
+      .getElementById("progressMeter")
+      .style.width =
+      Math.min(persenMeter, 100) + "%";
+
   }
 
-  // Default tanggal hari ini / cut-off awal
-  document.getElementById("tanggal").value = "2026-10-05";
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<script>
-  const SUPABASE_URL = 'https://xwjcpmxgsjjbrphbiipq.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_spj0cvuxeqTxqyk__WQFmw_MfPQw1aJ';
+  /* =========================
+     SIMPAN HARIAN
+  ========================== */
 
-  const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  async function simpanHarian() {
+
+    const status =
+      document.getElementById("statusSimpan");
+
+
+    const tanggal =
+      document
+        .getElementById("tanggal")
+        .value;
+
+
+    const p2tlKwh =
+      Number(
+        document
+          .getElementById("p2tlKwh")
+          .value || 0
+      );
+
+
+    const gantiMeter =
+      Number(
+        document
+          .getElementById("gantiMeter")
+          .value || 0
+      );
+
+
+    if (!tanggal) {
+
+      status.textContent =
+        "Pilih tanggal terlebih dahulu.";
+
+      return;
+
+    }
+
+
+    let totalPelanggan = 0;
+
+
+    document
+      .querySelectorAll(".jumlahPelanggan")
+      .forEach(input => {
+
+        totalPelanggan +=
+          Number(input.value || 0);
+
+      });
+
+
+    status.textContent =
+      "Menyimpan...";
+
+
+    const { error: errorHarian } =
+      await db
+        .from('p2tl_harian')
+        .insert({
+
+          tanggal: tanggal,
+
+          p2tl_kwh: p2tlKwh,
+
+          p2tl_pelanggan: totalPelanggan,
+
+          ganti_meter: gantiMeter
+
+        });
+
+
+    if (errorHarian) {
+
+      console.error(errorHarian);
+
+      status.textContent =
+        "Gagal menyimpan realisasi: " +
+        errorHarian.message;
+
+      return;
+
+    }
+
+
+    const temuan =
+      document.querySelectorAll(".temuan");
+
+
+    for (const item of temuan) {
+
+      const jenis =
+        item
+          .querySelector(".jenisTemuan")
+          .value
+          .trim();
+
+
+      const tarif =
+        item
+          .querySelector(".tarif")
+          .value
+          .trim();
+
+
+      const daya =
+        item
+          .querySelector(".daya")
+          .value
+          .trim();
+
+
+      const jumlah =
+        Number(
+          item
+            .querySelector(".jumlahPelanggan")
+            .value || 0
+        );
+
+
+      if (
+        !jenis &&
+        !tarif &&
+        !daya &&
+        jumlah === 0
+      ) {
+
+        continue;
+
+      }
+
+
+      const { error: errorTemuan } =
+        await db
+          .from('p2tl_temuan')
+          .insert({
+
+            tanggal: tanggal,
+
+            jenis_temuan: jenis,
+
+            tarif: tarif,
+
+            daya: daya,
+
+            jumlah_pelanggan: jumlah
+
+          });
+
+
+      if (errorTemuan) {
+
+        console.error(errorTemuan);
+
+        status.textContent =
+          "Realisasi tersimpan, tetapi ada detail temuan yang gagal: " +
+          errorTemuan.message;
+
+        return;
+
+      }
+
+    }
+
+
+    status.textContent =
+      "✓ Realisasi berhasil disimpan.";
+
+
+    await ambilTarget();
+
+    await ambilRealisasi();
+
+  }
+
+
+  /* =========================
+     UPDATE TARGET
+  ========================== */
+
+  async function updateTarget() {
+
+    const status =
+      document.getElementById("statusTarget");
+
+
+    const tahun =
+      Number(
+        document
+          .getElementById("tahunTarget")
+          .value
+      );
+
+
+    const p2tl =
+      Number(
+        document
+          .getElementById("targetP2TL")
+          .value
+      );
+
+
+    const meter =
+      Number(
+        document
+          .getElementById("targetMeter")
+          .value
+      );
+
+
+    status.textContent =
+      "Menyimpan target...";
+
+
+    const { data: targetAda, error: cekError } =
+      await db
+        .from('target_tahunan')
+        .select('id')
+        .eq('tahun', tahun)
+        .limit(1);
+
+
+    if (cekError) {
+
+      console.error(cekError);
+
+      status.textContent =
+        "Gagal memeriksa target: " +
+        cekError.message;
+
+      return;
+
+    }
+
+
+    let error;
+
+
+    if (targetAda && targetAda.length > 0) {
+
+      const hasil =
+        await db
+          .from('target_tahunan')
+          .update({
+
+            p2tl_target_kwh: p2tl,
+
+            ganti_meter_target: meter
+
+          })
+          .eq('id', targetAda[0].id);
+
+
+      error = hasil.error;
+
+    } else {
+
+      const hasil =
+        await db
+          .from('target_tahunan')
+          .insert({
+
+            tahun: tahun,
+
+            p2tl_target_kwh: p2tl,
+
+            ganti_meter_target: meter
+
+          });
+
+
+      error = hasil.error;
+
+    }
+
+
+    if (error) {
+
+      console.error(error);
+
+      status.textContent =
+        "Gagal menyimpan target: " +
+        error.message;
+
+      return;
+
+    }
+
+
+    status.textContent =
+      "✓ Target berhasil diperbarui.";
+
+
+    await ambilTarget();
+
+    await ambilRealisasi();
+
+  }
+
+
+  /* =========================
+     TANGGAL DEFAULT
+  ========================== */
+
+  const hariIni =
+    new Date();
+
+
+  const tahun =
+    hariIni.getFullYear();
+
+
+  const bulan =
+    String(
+      hariIni.getMonth() + 1
+    ).padStart(2, '0');
+
+
+  const hari =
+    String(
+      hariIni.getDate()
+    ).padStart(2, '0');
+
+
+  document
+    .getElementById("tanggal")
+    .value =
+    `${tahun}-${bulan}-${hari}`;
+
+
+  /* =========================
+     START
+  ========================== */
+
+  async function mulai() {
+
+    await ambilTarget();
+
+    await ambilRealisasi();
+
+  }
+
+
+  mulai();
+
 </script>
+
 </body>
 </html>

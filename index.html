@@ -1283,66 +1283,89 @@ function kelompokkanData(mode) {
 
   const hasil = {};
 
+  // BULANAN: selalu buat Januari - Desember
+  if (mode === "bulanan") {
+
+    const namaBulan = [
+      "Jan", "Feb", "Mar", "Apr",
+      "Mei", "Jun", "Jul", "Agu",
+      "Sep", "Okt", "Nov", "Des"
+    ];
+
+    namaBulan.forEach((nama, index) => {
+
+      const key = String(index + 1).padStart(2, "0");
+
+      hasil[key] = {
+        label: nama,
+        p2tl: 0,
+        meter: 0
+      };
+
+    });
+
+
+    dataHarianGrafik.forEach(row => {
+
+      if (!row.tanggal) return;
+
+      const tanggal = new Date(row.tanggal + "T00:00:00");
+
+      const bulan =
+        String(tanggal.getMonth() + 1).padStart(2, "0");
+
+      if (!hasil[bulan]) return;
+
+      hasil[bulan].p2tl +=
+        Number(row.p2tl_kwh || 0);
+
+      hasil[bulan].meter +=
+        Number(row.ganti_meter || 0);
+
+    });
+
+    return Object.values(hasil);
+  }
+
+
+  // MINGGUAN / HARIAN
   dataHarianGrafik.forEach(row => {
 
     if (!row.tanggal) return;
 
-    const tanggal = tanggalLokal(row.tanggal);
+    const tanggal =
+      new Date(row.tanggal + "T00:00:00");
 
-    let key = "";
-    let label = "";
+    let key;
+    let label;
 
-    if (mode === "bulanan") {
 
-      const bulan = tanggal.getMonth() + 1;
-
-      key =
-        tanggal.getFullYear() +
-        "-" +
-        String(bulan).padStart(2, "0");
-
-      label = tanggal.toLocaleDateString(
-        'id-ID',
-        { month: 'short' }
-      );
-
-    }
-
-    else if (mode === "mingguan") {
+    if (mode === "mingguan") {
 
       const minggu =
-        nomorMingguDalamBulan(tanggal);
+        Math.ceil(tanggal.getDate() / 7);
 
       key =
-        tanggal.getFullYear() +
-        "-" +
-        String(tanggal.getMonth() + 1).padStart(2, "0") +
-        "-W" +
-        minggu;
+        `${tanggal.getFullYear()}-${tanggal.getMonth() + 1}-${minggu}`;
 
       label =
-        "M" +
-        minggu +
-        " " +
-        tanggal.toLocaleDateString(
-          'id-ID',
-          { month: 'short' }
-        );
+        `M${minggu} ${tanggal.toLocaleDateString(
+          "id-ID",
+          { month: "short" }
+        )}`;
 
-    }
-
-    else {
+    } else {
 
       key = row.tanggal;
 
-      label = tanggal.toLocaleDateString(
-        'id-ID',
-        {
-          day: '2-digit',
-          month: 'short'
-        }
-      );
-
+      label =
+        tanggal.toLocaleDateString(
+          "id-ID",
+          {
+            day: "2-digit",
+            month: "short"
+          }
+        );
     }
 
 

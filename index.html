@@ -476,7 +476,13 @@
 
   // Default tanggal hari ini / cut-off awal
   document.getElementById("tanggal").value = "2026-10-05";
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<script>
+  const SUPABASE_URL = 'https://xwjcpmxgsjjbrphbiipq.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_spj0cvuxeqTxqyk__WQFmw_MfPQw1aJ';
+
+  const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 </body>
 </html>

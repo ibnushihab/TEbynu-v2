@@ -7,6 +7,7 @@
   <title>TE by Nu - Monitoring Transaksi Energi</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 
   <style>
     * {
@@ -327,9 +328,9 @@
         <button>Harian</button>
       </div>
 
-      <div class="chart-placeholder">
-        Grafik P2TL akan kita aktifkan setelah data database terbaca.
-      </div>
+      <div style="height:330px;">
+  <canvas id="chartP2TL"></canvas>
+</div>
 
     </div>
 
@@ -344,9 +345,9 @@
         <button>Harian</button>
       </div>
 
-      <div class="chart-placeholder">
-        Grafik Ganti kWh Meter akan kita aktifkan setelah data database terbaca.
-      </div>
+      <div style="height:330px;">
+  <canvas id="chartMeter"></canvas>
+</div>
 
     </div>
 
@@ -1230,21 +1231,480 @@
     `${tahun}-${bulan}-${hari}`;
 
 
-  /* =========================
-     START
-  ========================== */
+  /* ==============================
+   GRAFIK
+============================== */
 
-  async function mulai() {
+let chartP2TL = null;
+let chartMeter = null;
+let dataHarianGrafik = [];
 
-    await ambilTarget();
 
-    await ambilRealisasi();
+/* ==============================
+   BANTUAN TANGGAL
+============================== */
 
+function tanggalLokal(tanggal) {
+  return new Date(tanggal + "T00:00:00");
+}
+
+function nomorMingguDalamBulan(tanggal) {
+  return Math.ceil(tanggal.getDate() / 7);
+}
+
+
+/* ==============================
+   AMBIL DATA GRAFIK
+============================== */
+
+async function ambilDataGrafik() {
+
+  const { data, error } = await db
+    .from('p2tl_harian')
+    .select('*')
+    .order('tanggal', { ascending: true });
+
+  if (error) {
+    console.error("Gagal mengambil data grafik:", error);
+    return;
+  }
+
+  dataHarianGrafik = data || [];
+
+  buatGrafik('bulanan');
+}
+
+
+/* ==============================
+   KELOMPOKKAN DATA
+============================== */
+
+function kelompokkanData(mode) {
+
+  const hasil = {};
+
+  dataHarianGrafik.forEach(row => {
+
+    if (!row.tanggal) return;
+
+    const tanggal = tanggalLokal(row.tanggal);
+
+    let key = "";
+    let label = "";
+
+    if (mode === "bulanan") {
+
+      const bulan = tanggal.getMonth() + 1;
+
+      key =
+        tanggal.getFullYear() +
+        "-" +
+        String(bulan).padStart(2, "0");
+
+      label = tanggal.toLocaleDateString(
+        'id-ID',
+        { month: 'short' }
+      );
+
+    }
+
+    else if (mode === "mingguan") {
+
+      const minggu =
+        nomorMingguDalamBulan(tanggal);
+
+      key =
+        tanggal.getFullYear() +
+        "-" +
+        String(tanggal.getMonth() + 1).padStart(2, "0") +
+        "-W" +
+        minggu;
+
+      label =
+        "M" +
+        minggu +
+        " " +
+        tanggal.toLocaleDateString(
+          'id-ID',
+          { month: 'short' }
+        );
+
+    }
+
+    else {
+
+      key = row.tanggal;
+
+      label = tanggal.toLocaleDateString(
+        'id-ID',
+        {
+          day: '2-digit',
+          month: 'short'
+        }
+      );
+
+    }
+
+
+    if (!hasil[key]) {
+
+      hasil[key] = {
+        label: label,
+        p2tl: 0,
+        meter: 0
+      };
+
+    }
+
+
+    hasil[key].p2tl +=
+      Number(row.p2tl_kwh || 0);
+
+    hasil[key].meter +=
+      Number(row.ganti_meter || 0);
+
+  });
+
+
+  return Object.values(hasil);
+}
+
+
+/* ==============================
+   TARGET PER PERIODE
+============================== */
+
+function hitungTargetPerPeriode(mode, jumlahPeriode) {
+
+  const targetTahunanP2TL =
+    Number(
+      document.getElementById("targetP2TL").value || 0
+    );
+
+  const targetTahunanMeter =
+    Number(
+      document.getElementById("targetMeter").value || 0
+    );
+
+
+  let pembagi = 12;
+
+  if (mode === "mingguan") {
+    pembagi = 52;
+  }
+
+  if (mode === "harian") {
+    pembagi = 365;
   }
 
 
-  mulai();
+  return {
+    p2tl:
+      targetTahunanP2TL / pembagi,
 
+    meter:
+      targetTahunanMeter / pembagi
+  };
+
+}
+
+
+/* ==============================
+   BUAT GRAFIK
+============================== */
+
+function buatGrafik(mode) {
+
+  const kelompok =
+    kelompokkanData(mode);
+
+
+  const labels =
+    kelompok.map(item => item.label);
+
+
+  const realisasiP2TL =
+    kelompok.map(item => item.p2tl);
+
+
+  const realisasiMeter =
+    kelompok.map(item => item.meter);
+
+
+  const target =
+    hitungTargetPerPeriode(
+      mode,
+      kelompok.length
+    );
+
+
+  const targetP2TL =
+    kelompok.map(() => target.p2tl);
+
+
+  const targetMeter =
+    kelompok.map(() => target.meter);
+
+
+  if (chartP2TL) {
+    chartP2TL.destroy();
+  }
+
+  if (chartMeter) {
+    chartMeter.destroy();
+  }
+
+
+  /* ==============================
+     CHART P2TL
+  ============================== */
+
+  chartP2TL = new Chart(
+    document.getElementById("chartP2TL"),
+    {
+      type: 'bar',
+
+      data: {
+        labels: labels,
+
+        datasets: [
+
+          {
+            label: 'Realisasi P2TL',
+            data: realisasiP2TL,
+            borderWidth: 1,
+            borderRadius: 6
+          },
+
+          {
+            label: 'Target',
+            data: targetP2TL,
+            type: 'line',
+            borderWidth: 3,
+            tension: 0.25,
+            pointRadius: 3
+          }
+
+        ]
+      },
+
+      options: {
+
+        responsive: true,
+
+        maintainAspectRatio: false,
+
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+
+        plugins: {
+
+          tooltip: {
+
+            callbacks: {
+
+              label: function(context) {
+
+                return (
+                  context.dataset.label +
+                  ": " +
+                  formatAngka(context.raw) +
+                  " kWh"
+                );
+
+              }
+
+            }
+
+          }
+
+        },
+
+        scales: {
+
+          y: {
+            beginAtZero: true,
+
+            ticks: {
+
+              callback: function(value) {
+                return formatAngka(value);
+              }
+
+            }
+          }
+
+        }
+
+      }
+    }
+  );
+
+
+  /* ==============================
+     CHART GANTI METER
+  ============================== */
+
+  chartMeter = new Chart(
+    document.getElementById("chartMeter"),
+    {
+      type: 'bar',
+
+      data: {
+        labels: labels,
+
+        datasets: [
+
+          {
+            label: 'Realisasi Ganti Meter',
+            data: realisasiMeter,
+            borderWidth: 1,
+            borderRadius: 6
+          },
+
+          {
+            label: 'Target',
+            data: targetMeter,
+            type: 'line',
+            borderWidth: 3,
+            tension: 0.25,
+            pointRadius: 3
+          }
+
+        ]
+      },
+
+      options: {
+
+        responsive: true,
+
+        maintainAspectRatio: false,
+
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+
+        plugins: {
+
+          tooltip: {
+
+            callbacks: {
+
+              label: function(context) {
+
+                return (
+                  context.dataset.label +
+                  ": " +
+                  formatAngka(context.raw) +
+                  " pelanggan"
+                );
+
+              }
+
+            }
+
+          }
+
+        },
+
+        scales: {
+
+          y: {
+            beginAtZero: true,
+
+            ticks: {
+
+              callback: function(value) {
+                return formatAngka(value);
+              }
+
+            }
+          }
+
+        }
+
+      }
+    }
+  );
+
+}
+
+
+/* ==============================
+   TOMBOL PERIODE
+============================== */
+
+document.querySelectorAll(".periode").forEach(group => {
+
+  const buttons =
+    group.querySelectorAll("button");
+
+
+  buttons.forEach(button => {
+
+    button.addEventListener("click", function() {
+
+      document.querySelectorAll(".periode").forEach(g => {
+
+        g.querySelectorAll("button").forEach(b => {
+          b.classList.remove("active");
+        });
+
+      });
+
+
+      const mode =
+        this.textContent
+          .trim()
+          .toLowerCase();
+
+
+      document.querySelectorAll(".periode").forEach(g => {
+
+        const tombol =
+          Array.from(
+            g.querySelectorAll("button")
+          ).find(b =>
+            b.textContent
+              .trim()
+              .toLowerCase() === mode
+          );
+
+        if (tombol) {
+          tombol.classList.add("active");
+        }
+
+      });
+
+
+      buatGrafik(mode);
+
+    });
+
+  });
+
+});
+
+
+/* ==============================
+   START
+============================== */
+
+async function mulai() {
+
+  await ambilTarget();
+
+  await ambilRealisasi();
+
+  await ambilDataGrafik();
+
+}
+
+mulai();
+  
 </script>
 
 </body>

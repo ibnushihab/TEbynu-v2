@@ -384,6 +384,27 @@
 
     </div>
 
+
+    <div class="panel">
+      <h3>Laporan Berulang Kelainan Baca (LBKB)</h3>
+
+      <div class="cards" style="margin-top:16px;">
+        <div class="card">
+          <small>Target LBKB — Periode Terakhir</small>
+          <h3 id="targetLBKBDisplay">–</h3>
+        </div>
+        <div class="card">
+          <small>Realisasi LBKB — Periode Terakhir</small>
+          <h3 id="realisasiLBKBDisplay">–</h3>
+          <p class="note" id="periodeLBKB">Memuat data...</p>
+        </div>
+      </div>
+
+      <div style="height:330px;">
+        <canvas id="chartLBKB"></canvas>
+      </div>
+    </div>
+
   </section>
 
 
@@ -1743,6 +1764,87 @@ document.querySelectorAll(".periode").forEach(group => {
 
 
 /* ==============================
+   LBKB
+============================== */
+
+let chartLBKB = null;
+
+async function ambilDataLBKB() {
+  const { data, error } = await db
+    .from('lbkb_bulanan')
+    .select('tahun,bulan,target,realisasi')
+    .eq('tahun', 2026)
+    .order('bulan', { ascending: true });
+
+  if (error) {
+    console.error('Gagal membaca data LBKB:', error);
+    document.getElementById('periodeLBKB').textContent = 'Data LBKB belum dapat dibaca';
+    return;
+  }
+
+  const namaBulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const target = Array(12).fill(null);
+  const realisasi = Array(12).fill(null);
+
+  (data || []).forEach(row => {
+    const i = Number(row.bulan) - 1;
+    if (i < 0 || i > 11) return;
+    target[i] = row.target == null ? null : Number(row.target);
+    realisasi[i] = row.realisasi == null ? null : Number(row.realisasi);
+  });
+
+  let bulanTerakhir = -1;
+  for (let i = 0; i < 12; i++) {
+    if (realisasi[i] != null) bulanTerakhir = i;
+  }
+
+  if (bulanTerakhir >= 0) {
+    document.getElementById('targetLBKBDisplay').textContent =
+      target[bulanTerakhir] == null ? '–' : target[bulanTerakhir].toLocaleString('id-ID', { maximumFractionDigits: 2 }) + '%';
+    document.getElementById('realisasiLBKBDisplay').textContent =
+      realisasi[bulanTerakhir].toLocaleString('id-ID', { maximumFractionDigits: 2 }) + '%';
+    document.getElementById('periodeLBKB').textContent = namaBulan[bulanTerakhir] + ' 2026';
+  } else {
+    document.getElementById('targetLBKBDisplay').textContent = '–';
+    document.getElementById('realisasiLBKBDisplay').textContent = '–';
+    document.getElementById('periodeLBKB').textContent = 'Belum ada realisasi';
+  }
+
+  if (chartLBKB) chartLBKB.destroy();
+  chartLBKB = new Chart(document.getElementById('chartLBKB'), {
+    type: 'bar',
+    data: {
+      labels: namaBulan,
+      datasets: [
+        { label: 'Realisasi LBKB (%)', data: realisasi, borderWidth: 1, borderRadius: 6 },
+        { label: 'Target LBKB (%)', data: target, type: 'line', borderWidth: 3, tension: 0.2, pointRadius: 3 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.raw == null
+              ? `${ctx.dataset.label}: belum ada data`
+              : `${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString('id-ID', { maximumFractionDigits: 2 })}%`
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { callback: value => value + '%' }
+        }
+      }
+    }
+  });
+}
+
+
+/* ==============================
    GRAFIK SUSUT
 ============================== */
 
@@ -1913,6 +2015,8 @@ async function mulai() {
   await ambilRealisasi();
 
   await ambilDataGrafik();
+
+  await ambilDataLBKB();
 
   await ambilDataSusut();
 

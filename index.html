@@ -240,9 +240,22 @@
       font-weight: bold;
     }
 
+    .susut-overview { grid-template-columns: repeat(4, 1fr); }
+    .susut-status-ok, .susut-change-down { color: #16a34a; }
+    .susut-status-bad, .susut-change-up { color: #dc2626; }
+    .susut-change-flat { color: #667085; }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .susut-table { width: 100%; min-width: 1180px; border-collapse: collapse; font-size: 13px; }
+    .susut-table th, .susut-table td { padding: 10px 12px; border-bottom: 1px solid #eaecf0; text-align: right; white-space: nowrap; }
+    .susut-table th:first-child, .susut-table td:first-child { text-align: left; position: sticky; left: 0; background: white; font-weight: 700; z-index: 1; }
+    .susut-table thead th { background: #f8fafc; color: #475467; }
+    .susut-table thead th:first-child { background: #f8fafc; }
+    .susut-table .row-highlight td { font-weight: 700; }
+
     @media (max-width: 650px) {
       .cards,
-      .row {
+      .row,
+      .susut-overview {
         grid-template-columns: 1fr;
       }
 
@@ -381,6 +394,13 @@
   <section id="susut" class="page">
     <h2>Monitoring Susut Distribusi 2026</h2>
 
+    <div class="cards susut-overview">
+      <div class="card"><small id="susutPeriodeLabel">Periode Terakhir</small><h3 id="susutRealisasiTerakhir">–</h3><div class="status">Realisasi Susut Kumulatif</div></div>
+      <div class="card"><small id="susutTargetLabel">Target Kumulatif</small><h3 id="susutTargetTerakhir">–</h3><div class="status" id="susutStatusTarget">Menunggu data</div></div>
+      <div class="card"><small>Pencapaian terhadap Target</small><h3 id="susutSelisihTarget">–</h3><div class="status" id="susutKeteranganTarget">–</div></div>
+      <div class="card"><small id="susutPerubahanLabel">Perubahan dari Bulan Sebelumnya</small><h3 id="susutPerubahan">–</h3><div class="status" id="susutKeteranganPerubahan">–</div></div>
+    </div>
+
     <div class="panel">
       <h3 id="judulGrafikSusut">Susut Kumulatif — Realisasi vs Target</h3>
       <div class="periode" id="periodeSusut">
@@ -390,6 +410,14 @@
       <p class="note" id="catatanSusut">Kumulatif: Jan; Jan+Feb; Jan+Feb+Mar; dan seterusnya. Target dibaca dari Supabase.</p>
       <div style="height:360px;">
         <canvas id="chartSusut"></canvas>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Detail Komponen Susut Jan–Des</h3>
+      <p class="note">Data energi dibaca dari Supabase. Bulan yang belum diisi ditampilkan sebagai –.</p>
+      <div class="table-scroll">
+        <table class="susut-table" id="tabelSusut"><thead id="tabelSusutHead"></thead><tbody id="tabelSusutBody"></tbody></table>
       </div>
     </div>
   </section>
@@ -1756,6 +1784,48 @@ async function ambilDataSusut() {
   renderGrafikSusut();
 }
 
+function formatEnergiSusut(value) {
+  if (value == null || Number.isNaN(Number(value))) return '–';
+  return Number(value).toLocaleString('id-ID', { maximumFractionDigits: 2 });
+}
+function formatPersenSusut(value) {
+  if (value == null || Number.isNaN(Number(value))) return '–';
+  return Number(value).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+}
+function renderOverviewSusut(namaBulan, perBulan, susutKumulatif, targetKumulatif) {
+  let latest = -1;
+  for (let i = 0; i < 12; i++) if (perBulan[i].ada) latest = i;
+  if (latest < 0) return;
+  const realisasi = susutKumulatif[latest], target = targetKumulatif[latest], bulanNama = namaBulan[latest];
+  document.getElementById('susutPeriodeLabel').textContent = `Periode Terakhir — ${bulanNama} 2026`;
+  document.getElementById('susutRealisasiTerakhir').textContent = formatPersenSusut(realisasi);
+  document.getElementById('susutTargetLabel').textContent = `Target Kumulatif — ${bulanNama} 2026`;
+  document.getElementById('susutTargetTerakhir').textContent = formatPersenSusut(target);
+  const statusEl=document.getElementById('susutStatusTarget'), selisihEl=document.getElementById('susutSelisihTarget'), ketTargetEl=document.getElementById('susutKeteranganTarget');
+  if (target != null && realisasi != null) {
+    const gap=realisasi-target, tercapai=realisasi<=target;
+    statusEl.textContent=tercapai?'Tercapai':'Belum Tercapai'; statusEl.className='status '+(tercapai?'susut-status-ok':'susut-status-bad');
+    selisihEl.textContent=(gap>0?'+':'')+gap.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+' poin'; selisihEl.className=tercapai?'susut-status-ok':'susut-status-bad';
+    ketTargetEl.textContent=tercapai?'Di bawah / sama dengan target':'Di atas target'; ketTargetEl.className='status '+(tercapai?'susut-status-ok':'susut-status-bad');
+  } else { statusEl.textContent='Target belum tersedia'; statusEl.className='status'; selisihEl.textContent='–'; ketTargetEl.textContent='–'; }
+  const label=document.getElementById('susutPerubahanLabel'), el=document.getElementById('susutPerubahan'), ket=document.getElementById('susutKeteranganPerubahan'), prev=latest-1;
+  if (prev>=0 && susutKumulatif[prev]!=null) {
+    const perubahan=realisasi-susutKumulatif[prev], abs=Math.abs(perubahan);
+    label.textContent=`Perubahan ${namaBulan[latest]} vs ${namaBulan[prev]}`;
+    if(perubahan<0){el.textContent='↓ '+abs.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+' poin';el.className='susut-change-down';ket.textContent='Susut turun';ket.className='status susut-change-down';}
+    else if(perubahan>0){el.textContent='↑ '+abs.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+' poin';el.className='susut-change-up';ket.textContent='Susut naik';ket.className='status susut-change-up';}
+    else{el.textContent='0,00 poin';el.className='susut-change-flat';ket.textContent='Tidak berubah';ket.className='status susut-change-flat';}
+  } else { label.textContent='Perubahan dari Bulan Sebelumnya'; el.textContent='–'; ket.textContent='Belum ada pembanding'; }
+}
+function renderTabelSusut(namaBulan, perBulan, susutBulanan, susutKumulatif, targetKumulatif) {
+  document.getElementById('tabelSusutHead').innerHTML='<tr><th>Komponen</th>'+namaBulan.map(b=>`<th>${b}</th>`).join('')+'</tr>';
+  const rows=[['Penerimaan','penerimaan','energi'],['Jual TM','jual_tm','energi'],['Jual TR','jual_tr','energi'],['Kirim Unit Lain','kirim_unit_lain','energi'],['Pemakaian Sendiri','pemakaian_sendiri','energi'],['E-MIN TM','emin_tm','energi'],['E-MIN TR','emin_tr','energi'],['Susut Bulanan (%)',null,'bulanan'],['Susut Kumulatif (%)',null,'kumulatif'],['Target Kumulatif (%)',null,'target']];
+  document.getElementById('tabelSusutBody').innerHTML=rows.map(([label,key,type])=>{
+    const cells=perBulan.map((row,i)=>{let value='–';if(type==='energi')value=row.ada?formatEnergiSusut(row[key]):'–';if(type==='bulanan')value=formatPersenSusut(susutBulanan[i]);if(type==='kumulatif')value=formatPersenSusut(susutKumulatif[i]);if(type==='target')value=formatPersenSusut(targetKumulatif[i]);return `<td>${value}</td>`;}).join('');
+    const highlight=['bulanan','kumulatif','target'].includes(type)?' class="row-highlight"':''; return `<tr${highlight}><td>${label}</td>${cells}</tr>`;
+  }).join('');
+}
+
 function renderGrafikSusut() {
   const namaBulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
   const perBulan = Array.from({ length: 12 }, (_, i) => ({
@@ -1791,6 +1861,9 @@ function renderGrafikSusut() {
     const i = Number(row.bulan) - 1;
     if (i >= 0 && i < 12) targetKumulatif[i] = Number(row.target_susut);
   });
+
+  renderOverviewSusut(namaBulan, perBulan, susutKumulatif, targetKumulatif);
+  renderTabelSusut(namaBulan, perBulan, susutBulanan, susutKumulatif, targetKumulatif);
 
   const datasets = modeSusut === 'bulanan'
     ? [{ label:'Realisasi Susut Bulanan (%)', data:susutBulanan, borderWidth:3, tension:0.25, pointRadius:5, spanGaps:false }]

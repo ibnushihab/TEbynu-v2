@@ -8,6 +8,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <style>
     * {
@@ -43,7 +44,8 @@
       gap: 8px;
       padding: 12px;
       background: white;
-      overflow-x: auto;
+      overflow: visible;
+      flex-wrap: wrap;
       border-bottom: 1px solid #ddd;
       position: sticky;
       top: 0;
@@ -64,6 +66,12 @@
       background: #007c91;
       color: white;
     }
+
+    .nav-dropdown { position:relative; flex:0 0 auto; }
+    .nav-dropdown-menu { display:none; position:absolute; top:calc(100% + 6px); left:0; min-width:190px; padding:7px; background:#fff; border:1px solid #e1e6eb; border-radius:10px; box-shadow:0 10px 28px rgba(0,0,0,.12); z-index:50; }
+    .nav-dropdown:hover .nav-dropdown-menu, .nav-dropdown:focus-within .nav-dropdown-menu, .nav-dropdown.open .nav-dropdown-menu { display:block; }
+    .nav-dropdown-menu button { display:block; width:100%; text-align:left; background:transparent; border-radius:7px; padding:10px 12px; }
+    .nav-dropdown-menu button:hover { background:#edf6f7; color:#006d7d; }
 
     main {
       max-width: 1100px;
@@ -295,10 +303,100 @@
     .kpi-metric b { font-size:15px; color:#344054; }
     @media(max-width:760px){ .overview-grid{grid-template-columns:1fr;} .overview-head{align-items:flex-start;flex-direction:column;} }
 
+
+
+    /* ===== LAPORAN HARIAN ===== */
+    .report-toolbar { display:flex; align-items:end; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+    .report-toolbar .field { width:220px; }
+    .report-toolbar input { margin-bottom:0; background:#fff; }
+    .report-actions { display:flex; gap:9px; flex-wrap:wrap; }
+    .report-preview-wrap { overflow-x:auto; padding:4px 2px 22px; }
+    .report-sheet { width:820px; min-height:1025px; margin:0 auto; background:#f6f8fb; border:1px solid #e4e7ec; border-radius:22px; overflow:hidden; color:#172033; box-shadow:0 12px 35px rgba(16,24,40,.09); }
+    .report-header { background:#0b5563; color:#fff; padding:30px 34px 27px; display:flex; justify-content:space-between; gap:24px; align-items:flex-end; }
+    .report-brand { font-size:12px; font-weight:800; letter-spacing:1.6px; opacity:.78; margin-bottom:7px; }
+    .report-header h2 { font-size:28px; line-height:1.08; margin:0 0 7px; letter-spacing:-.5px; }
+    .report-unit { font-size:14px; opacity:.9; font-weight:700; }
+    .report-date { text-align:right; min-width:245px; }
+    .report-date strong { display:block; font-size:16px; margin-bottom:5px; }
+    .report-date span { font-size:12px; opacity:.82; }
+    .report-body { padding:26px 28px 22px; }
+    .report-summary { background:#fff; border:1px solid #e4e7ec; border-radius:15px; padding:14px 16px; margin-bottom:16px; display:flex; justify-content:space-between; gap:12px; align-items:center; }
+    .report-summary strong { font-size:14px; }
+    .report-summary span { color:#667085; font-size:12px; }
+    .report-summary-badges { display:flex; gap:7px; }
+    .summary-pill { border-radius:999px; padding:6px 10px; font-size:11px; font-weight:800; }
+    .summary-pill.good { background:#e8f5ec; color:#18743b; } .summary-pill.attn { background:#fff0ed; color:#b42318; }
+    .report-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .report-card { background:#fff; border:1px solid #e4e7ec; border-radius:17px; padding:18px; position:relative; overflow:hidden; }
+    .report-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:#98a2b3; }
+    .report-card.good::before { background:#2e8b57; } .report-card.near::before { background:#d39a24; } .report-card.attn::before { background:#c94b40; }
+    .report-card-head { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; margin-bottom:14px; }
+    .report-card-title { font-size:15px; font-weight:900; color:#25324a; }
+    .report-card-period { margin-top:4px; font-size:10px; color:#667085; font-weight:700; }
+    .report-status { border-radius:999px; padding:5px 8px; font-size:9px; font-weight:900; white-space:nowrap; background:#f2f4f7; color:#475467; }
+    .report-card.good .report-status { background:#e8f5ec; color:#18743b; } .report-card.near .report-status { background:#fff5db; color:#946200; } .report-card.attn .report-status { background:#fff0ed; color:#b42318; }
+    .report-hero { display:flex; align-items:baseline; gap:7px; margin-bottom:3px; }
+    .report-hero strong { font-size:31px; line-height:1; letter-spacing:-.8px; }
+    .report-hero span { font-size:11px; color:#667085; font-weight:700; }
+    .report-caption { font-size:10px; color:#667085; margin-bottom:13px; min-height:14px; }
+    .report-progress { height:6px; background:#edf0f3; border-radius:99px; overflow:hidden; margin:8px 0 14px; }
+    .report-progress > div { height:100%; border-radius:99px; background:#98a2b3; }
+    .report-card.good .report-progress > div { background:#2e8b57; } .report-card.near .report-progress > div { background:#d39a24; } .report-card.attn .report-progress > div { background:#c94b40; }
+    .report-metrics { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .report-metric { background:#f8fafc; border-radius:10px; padding:9px 10px; min-height:53px; }
+    .report-metric small { display:block; font-size:9px; color:#667085; margin-bottom:4px; line-height:1.2; }
+    .report-metric b { font-size:12px; color:#344054; line-height:1.2; }
+    .report-section-label { grid-column:1/-1; font-size:10px; font-weight:900; color:#667085; letter-spacing:1px; margin:5px 0 -4px; text-transform:uppercase; }
+    .report-footer { margin-top:18px; padding-top:13px; border-top:1px solid #e4e7ec; display:flex; justify-content:space-between; gap:12px; color:#667085; font-size:10px; }
+    .report-footer strong { color:#344054; }
+    .report-note { margin-top:12px; color:#667085; font-size:12px; }
+    @media(max-width:850px){ .report-preview-wrap{margin-left:-14px;margin-right:-14px;} }
+
+    /* ===== ACCESS GATE ===== */
+    body.locked { overflow: hidden; }
+    #siteShell { transition: filter .35s ease, transform .35s ease; }
+    body.locked #siteShell { filter: blur(11px); transform: scale(1.01); pointer-events:none; user-select:none; }
+    .access-gate { position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(9,30,45,.28); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); transition:opacity .3s ease, visibility .3s ease; }
+    .access-gate.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+    .login-card { width:min(390px,100%); background:rgba(255,255,255,.96); border:1px solid rgba(255,255,255,.7); border-radius:22px; padding:28px; box-shadow:0 24px 70px rgba(0,0,0,.22); }
+    .login-brand { display:flex; align-items:center; gap:12px; margin-bottom:22px; }
+    .login-icon { width:46px; height:46px; border-radius:14px; display:grid; place-items:center; background:#007c91; color:#fff; font-size:22px; box-shadow:0 8px 22px rgba(0,124,145,.24); }
+    .login-brand h2 { margin:0 0 3px; font-size:22px; }
+    .login-brand p { margin:0; color:#667085; font-size:12px; }
+    .login-card label { margin-bottom:8px; }
+    .password-wrap { position:relative; }
+    .password-wrap input { padding-right:48px; height:48px; border-radius:12px; border:1px solid #d0d5dd; background:#fff; }
+    .password-wrap button { position:absolute; right:7px; top:7px; width:34px; height:34px; border:0; border-radius:9px; background:#f2f4f7; cursor:pointer; font-size:16px; }
+    .login-submit { width:100%; margin-top:14px; height:47px; border:0; border-radius:12px; background:#007c91; color:#fff; font-weight:800; font-size:14px; cursor:pointer; }
+    .login-submit:active { transform:translateY(1px); }
+    .login-error { min-height:18px; margin-top:10px; color:#b42318; font-size:12px; font-weight:700; text-align:center; }
+    .login-note { margin-top:12px; color:#98a2b3; font-size:11px; text-align:center; }
+
   </style>
 </head>
 
-<body>
+<body class="locked">
+
+<div id="accessGate" class="access-gate">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-icon">🔒</div>
+      <div><h2>TE by Nu</h2><p>Monitoring Kinerja Transaksi Energi</p></div>
+    </div>
+    <form id="accessForm">
+      <label for="accessPassword">Password Akses</label>
+      <div class="password-wrap">
+        <input id="accessPassword" type="password" autocomplete="current-password" placeholder="Masukkan password" autofocus>
+        <button id="togglePassword" type="button" aria-label="Tampilkan password">👁</button>
+      </div>
+      <button class="login-submit" type="submit">Masuk ke Overview</button>
+      <div id="loginError" class="login-error"></div>
+    </form>
+    <div class="login-note">Akses internal • TE by Nu</div>
+  </div>
+</div>
+
+<div id="siteShell">
 
 <header>
   <h1>TE by Nu</h1>
@@ -306,30 +404,18 @@
 </header>
 
 <nav>
-  <button class="tab active"
-          onclick="bukaHalaman('overview', this)">
-    Overview
-  </button>
-
-  <button class="tab"
-          onclick="bukaHalaman('dashboard', this)">
-    P2TL Harmet LBKB
-  </button>
-
-  <button class="tab"
-          onclick="bukaHalaman('susut', this)">
-    Susut
-  </button>
-
-  <button class="tab"
-          onclick="bukaHalaman('entri', this)">
-    Entri Harian
-  </button>
-
-  <button class="tab"
-          onclick="bukaHalaman('target', this)">
-    Pengaturan Target
-  </button>
+  <button class="tab active" onclick="bukaHalaman('overview', this)">Overview</button>
+  <button class="tab" onclick="bukaHalaman('dashboard', this)">P2TL Harmet LBKB</button>
+  <div class="nav-dropdown">
+    <button class="tab" id="susutNavButton" type="button" onclick="toggleSusutMenu(event)">Susut ▾</button>
+    <div class="nav-dropdown-menu">
+      <button type="button" onclick="bukaHalaman('susut', document.getElementById('susutNavButton'))">Susut Distribusi</button>
+      <button type="button" onclick="bukaHalaman('susut-detail', document.getElementById('susutNavButton'))">Susut Detail</button>
+    </div>
+  </div>
+  <button class="tab" onclick="bukaHalaman('laporan', this)">Laporan Harian</button>
+  <button class="tab" onclick="bukaHalaman('entri', this)">Entri Harian</button>
+  <button class="tab" onclick="bukaHalaman('target', this)">Pengaturan Target</button>
 </nav>
 
 <main>
@@ -513,6 +599,111 @@
     </div>
   </section>
 
+
+
+  <!-- =========================
+       LAPORAN HARIAN
+  ========================== -->
+  <section id="susut-detail" class="page">
+  <div class="card" style="text-align:center;padding:46px 24px;">
+    <div style="font-size:13px;font-weight:800;letter-spacing:.08em;color:#007c91;text-transform:uppercase;">Susut</div>
+    <h2 style="margin:8px 0 6px;">Susut Detail</h2>
+    <p class="note" style="margin:0 auto;max-width:560px;">Halaman Susut Detail sudah disiapkan. Kontennya kita isi sesuai konsep berikutnya.</p>
+  </div>
+</section>
+
+<section id="laporan" class="page">
+    <h2>Laporan Harian</h2>
+    <p class="note" style="margin:6px 0 18px;">Preview otomatis dari data Supabase. Pilih tanggal laporan lalu unduh sebagai PNG untuk dikirim manual.</p>
+
+    <div class="report-toolbar panel">
+      <div class="field">
+        <label for="tanggalLaporan">Tanggal Laporan</label>
+        <input type="date" id="tanggalLaporan">
+      </div>
+      <div class="report-actions">
+        <button class="secondary" type="button" onclick="renderLaporanHarian()">Perbarui Preview</button>
+        <button class="primary" type="button" id="btnDownloadLaporan" onclick="downloadLaporanPNG()">Download PNG</button>
+      </div>
+    </div>
+
+    <div class="report-preview-wrap">
+      <div id="reportSheet" class="report-sheet">
+        <div class="report-header">
+          <div>
+            <div class="report-brand">TE BY NU</div>
+            <h2>Kilas Kinerja<br>Transaksi Energi</h2>
+            <div class="report-unit">ULP Sungai Penuh</div>
+          </div>
+          <div class="report-date">
+            <strong id="rptTanggal">–</strong>
+            <span id="rptUpdate">Update – WIB</span>
+          </div>
+        </div>
+        <div class="report-body">
+          <div class="report-summary">
+            <div><strong>Executive Summary</strong><br><span>Posisi kinerja berdasarkan periode data masing-masing indikator</span></div>
+            <div class="report-summary-badges"><div class="summary-pill good" id="rptGoodCount">0 tercapai</div><div class="summary-pill attn" id="rptAttnCount">0 perlu perhatian</div></div>
+          </div>
+
+          <div class="report-grid">
+            <div class="report-section-label">Kinerja Harian</div>
+            <div class="report-card" id="rptP2TLCard">
+              <div class="report-card-head"><div><div class="report-card-title">P2TL</div><div class="report-card-period" id="rptP2TLPeriod">–</div></div><div class="report-status" id="rptP2TLStatus">–</div></div>
+              <div class="report-hero"><strong id="rptP2TLPct">–</strong><span>target harian</span></div>
+              <div class="report-caption" id="rptP2TLToday">–</div>
+              <div class="report-progress"><div id="rptP2TLBar"></div></div>
+              <div class="report-metrics">
+                <div class="report-metric"><small>Target harian</small><b id="rptP2TLDailyTarget">–</b></div>
+                <div class="report-metric"><small>Realisasi bulan berjalan</small><b id="rptP2TLMonth">–</b></div>
+                <div class="report-metric"><small>Pencapaian target bulan</small><b id="rptP2TLMonthPct">–</b></div>
+                <div class="report-metric"><small>Pencapaian target tahunan</small><b id="rptP2TLAnnualPct">–</b></div>
+              </div>
+            </div>
+
+            <div class="report-card" id="rptMeterCard">
+              <div class="report-card-head"><div><div class="report-card-title">Ganti kWh Meter</div><div class="report-card-period" id="rptMeterPeriod">–</div></div><div class="report-status" id="rptMeterStatus">–</div></div>
+              <div class="report-hero"><strong id="rptMeterPct">–</strong><span>target harian</span></div>
+              <div class="report-caption" id="rptMeterToday">–</div>
+              <div class="report-progress"><div id="rptMeterBar"></div></div>
+              <div class="report-metrics">
+                <div class="report-metric"><small>Target harian</small><b id="rptMeterDailyTarget">–</b></div>
+                <div class="report-metric"><small>Realisasi bulan berjalan</small><b id="rptMeterMonth">–</b></div>
+                <div class="report-metric"><small>Pencapaian target bulan</small><b id="rptMeterMonthPct">–</b></div>
+                <div class="report-metric"><small>Pencapaian target tahunan</small><b id="rptMeterAnnualPct">–</b></div>
+              </div>
+            </div>
+
+            <div class="report-section-label">Kinerja Bulanan Terakhir</div>
+            <div class="report-card" id="rptSusutCard">
+              <div class="report-card-head"><div><div class="report-card-title">Susut Distribusi</div><div class="report-card-period" id="rptSusutPeriod">–</div></div><div class="report-status" id="rptSusutStatus">–</div></div>
+              <div class="report-hero"><strong id="rptSusutValue">–</strong><span>susut kumulatif</span></div>
+              <div class="report-caption" id="rptSusutGap">–</div>
+              <div class="report-progress"><div id="rptSusutBar"></div></div>
+              <div class="report-metrics">
+                <div class="report-metric"><small>Target kumulatif</small><b id="rptSusutTarget">–</b></div>
+                <div class="report-metric"><small>Selisih terhadap target</small><b id="rptSusutDiff">–</b></div>
+              </div>
+            </div>
+
+            <div class="report-card" id="rptLBKBCard">
+              <div class="report-card-head"><div><div class="report-card-title">LBKB</div><div class="report-card-period" id="rptLBKBPeriod">–</div></div><div class="report-status" id="rptLBKBStatus">–</div></div>
+              <div class="report-hero"><strong id="rptLBKBPct">–</strong><span>pencapaian</span></div>
+              <div class="report-caption" id="rptLBKBCaption">–</div>
+              <div class="report-progress"><div id="rptLBKBBar"></div></div>
+              <div class="report-metrics">
+                <div class="report-metric"><small>Target</small><b id="rptLBKBTarget">–</b></div>
+                <div class="report-metric"><small>Realisasi</small><b id="rptLBKBValue">–</b></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="report-footer"><div><strong>TE by Nu</strong><br>Monitoring Transaksi Energi</div><div style="text-align:right;">Data bersumber dari monitoring<br>TE ULP Sungai Penuh</div></div>
+        </div>
+      </div>
+    </div>
+    <p class="report-note">P2TL dan Ganti Meter mengikuti tanggal laporan. Susut dan LBKB menampilkan data final bulanan terakhir yang tersedia sampai periode tersebut.</p>
+  </section>
 
   <!-- =========================
        ENTRI HARIAN
@@ -715,6 +906,8 @@
 </main>
 
 
+</div>
+
 <script>
 
   /* =========================
@@ -750,6 +943,17 @@
      NAVIGASI
   ========================== */
 
+  function toggleSusutMenu(event) {
+    event.stopPropagation();
+    const dropdown = document.querySelector('.nav-dropdown');
+    dropdown.classList.toggle('open');
+  }
+
+  document.addEventListener('click', function(event) {
+    const dropdown = document.querySelector('.nav-dropdown');
+    if (dropdown && !dropdown.contains(event.target)) dropdown.classList.remove('open');
+  });
+
   function bukaHalaman(id, tombol) {
 
     document
@@ -776,6 +980,9 @@
 
 
     tombol.classList.add("active");
+
+    const dropdown = document.querySelector('.nav-dropdown');
+    if (dropdown) dropdown.classList.remove('open');
 
   }
 
@@ -2145,6 +2352,102 @@ function renderOverviewEksekutif(){
   document.getElementById('ovLBKBPersen').textContent=persenID(lp); document.getElementById('ovLBKBRealisasi').textContent=lr==null?'Belum ada realisasi':('Realisasi '+nama[lIdx]+' '+persenID(lr)); document.getElementById('ovLBKBTargetLabel').textContent=lIdx>=0?'Target '+nama[lIdx]:'Target bulan'; document.getElementById('ovLBKBTarget').textContent=persenID(lt); document.getElementById('ovLBKBNilai').textContent=persenID(lr);
   setKpiStatus('ovLBKB','ovLBKBStatus',lok,lp==null?'Belum Ada Data':(lok?'Tercapai':'Belum Tercapai'));
 }
+
+
+/* ==============================
+   LAPORAN HARIAN -> PNG
+============================== */
+const NAMA_BULAN_REPORT=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+function parseTanggalLokal(iso){
+  const [y,m,d]=String(iso).split('-').map(Number);
+  return new Date(y,m-1,d);
+}
+function isoLokal(date){
+  const y=date.getFullYear(), m=String(date.getMonth()+1).padStart(2,'0'), d=String(date.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+function statusKinerja(pct){
+  if(pct==null || !Number.isFinite(pct)) return {cls:'attn',label:'BELUM ADA DATA'};
+  if(pct>=100) return {cls:'good',label:'TERCAPAI'};
+  if(pct>=91) return {cls:'near',label:'MENDEKATI TARGET'};
+  return {cls:'attn',label:'PERLU PERHATIAN'};
+}
+function setReportCard(cardId,statusId,status){
+  const card=document.getElementById(cardId); card.classList.remove('good','near','attn'); card.classList.add(status.cls);
+  document.getElementById(statusId).textContent=status.label;
+}
+function setReportBar(id,pct){ document.getElementById(id).style.width=Math.max(0,Math.min(100,Number(pct)||0))+'%'; }
+function angkaReport(v,d=0){ return Number(v||0).toLocaleString('id-ID',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function pctReport(v){ return v==null || !Number.isFinite(Number(v))?'–':Number(v).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+'%'; }
+
+function renderLaporanHarian(){
+  const input=document.getElementById('tanggalLaporan');
+  if(!input.value) input.value=isoLokal(new Date());
+  const reportDate=parseTanggalLokal(input.value);
+  const y=reportDate.getFullYear(), mi=reportDate.getMonth(), day=reportDate.getDate();
+  const endIso=input.value;
+  const daysInMonth=new Date(y,mi+1,0).getDate();
+  document.getElementById('rptTanggal').textContent=reportDate.toLocaleDateString('id-ID',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('rptUpdate').textContent='Dibuat '+new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',hour12:false})+' WIB';
+
+  const annualP=Number(document.getElementById('targetP2TL').value||0), annualM=Number(document.getElementById('targetMeter').value||0);
+  const monthTargetP=annualP/12, monthTargetM=annualM/12;
+  const dailyTargetP=monthTargetP/daysInMonth, dailyTargetM=monthTargetM/daysInMonth;
+  let pToday=0,mToday=0,pMonth=0,mMonth=0,pYtd=0,mYtd=0;
+  dataHarianGrafik.forEach(r=>{
+    if(!r.tanggal || String(r.tanggal)>endIso) return;
+    const [ry,rm]=String(r.tanggal).split('-').map(Number);
+    if(ry!==y) return;
+    const p=Number(r.p2tl_kwh||0), m=Number(r.ganti_meter||0);
+    pYtd+=p; mYtd+=m;
+    if(rm-1===mi){ pMonth+=p; mMonth+=m; }
+    if(String(r.tanggal)===endIso){ pToday+=p; mToday+=m; }
+  });
+  const pDailyPct=dailyTargetP?100*pToday/dailyTargetP:null, mDailyPct=dailyTargetM?100*mToday/dailyTargetM:null;
+  const pMonthPct=monthTargetP?100*pMonth/monthTargetP:null, mMonthPct=monthTargetM?100*mMonth/monthTargetM:null;
+  const pAnnualPct=annualP?100*pYtd/annualP:null, mAnnualPct=annualM?100*mYtd/annualM:null;
+  const pStatus=statusKinerja(pDailyPct), mStatus=statusKinerja(mDailyPct);
+  setReportCard('rptP2TLCard','rptP2TLStatus',pStatus); setReportCard('rptMeterCard','rptMeterStatus',mStatus);
+  document.getElementById('rptP2TLPeriod').textContent='Realisasi '+reportDate.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+  document.getElementById('rptP2TLPct').textContent=pctReport(pDailyPct); document.getElementById('rptP2TLToday').textContent=angkaReport(pToday)+' kWh realisasi hari ini';
+  document.getElementById('rptP2TLDailyTarget').textContent=angkaReport(dailyTargetP)+' kWh'; document.getElementById('rptP2TLMonth').textContent=angkaReport(pMonth)+' kWh'; document.getElementById('rptP2TLMonthPct').textContent=pctReport(pMonthPct); document.getElementById('rptP2TLAnnualPct').textContent=pctReport(pAnnualPct); setReportBar('rptP2TLBar',pDailyPct);
+  document.getElementById('rptMeterPeriod').textContent='Realisasi '+reportDate.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+  document.getElementById('rptMeterPct').textContent=pctReport(mDailyPct); document.getElementById('rptMeterToday').textContent=angkaReport(mToday)+' pelanggan realisasi hari ini';
+  document.getElementById('rptMeterDailyTarget').textContent=angkaReport(dailyTargetM,2)+' pelanggan'; document.getElementById('rptMeterMonth').textContent=angkaReport(mMonth)+' pelanggan'; document.getElementById('rptMeterMonthPct').textContent=pctReport(mMonthPct); document.getElementById('rptMeterAnnualPct').textContent=pctReport(mAnnualPct); setReportBar('rptMeterBar',mDailyPct);
+
+  // Susut: data final terbaru yang periodenya tidak melewati bulan laporan.
+  let sIdx=-1; dataSusutCache.forEach(r=>{ const i=Number(r.bulan)-1; if(Number(r.tahun||2026)===y && i<=mi && Number(r.penerimaan||0)>0) sIdx=Math.max(sIdx,i); });
+  const per=Array(12).fill(null); dataSusutCache.forEach(r=>{const i=Number(r.bulan)-1;if(Number(r.tahun||2026)===y&&i>=0&&i<12)per[i]=r;});
+  const total={penerimaan:0,jual_tm:0,jual_tr:0,kirim_unit_lain:0,pemakaian_sendiri:0,emin_tm:0,emin_tr:0}; let sKum=null;
+  if(sIdx>=0){ for(let i=0;i<=sIdx;i++){ const r=per[i]; if(!r) continue; Object.keys(total).forEach(k=>total[k]+=Number(r[k]||0)); } sKum=hitungSusut(total); }
+  const stRow=sIdx>=0?targetSusutCache.find(r=>Number(r.tahun||2026)===y&&Number(r.bulan)===sIdx+1):null; const sTarget=stRow?Number(stRow.target_susut):null; const sDiff=(sKum!=null&&sTarget!=null)?sKum-sTarget:null; const sOk=sKum!=null&&sTarget!=null&&sKum<=sTarget;
+  const sStatus=sKum==null?{cls:'attn',label:'BELUM ADA DATA'}:(sOk?{cls:'good',label:'TERCAPAI'}:{cls:'attn',label:'PERLU PERHATIAN'}); setReportCard('rptSusutCard','rptSusutStatus',sStatus);
+  document.getElementById('rptSusutPeriod').textContent=sIdx>=0?'Data final · '+NAMA_BULAN_REPORT[sIdx]+' '+y:'Belum ada data final'; document.getElementById('rptSusutValue').textContent=pctReport(sKum); document.getElementById('rptSusutTarget').textContent=pctReport(sTarget); document.getElementById('rptSusutDiff').textContent=sDiff==null?'–':(sDiff>0?'+':'')+angkaReport(sDiff,2)+' poin'; document.getElementById('rptSusutGap').textContent=sDiff==null?'–':Math.abs(sDiff).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+' poin '+(sDiff<=0?'lebih baik dari target':'di atas target'); setReportBar('rptSusutBar',sKum!=null&&sTarget?Math.min(100,100*sTarget/sKum):0);
+
+  // LBKB: realisasi final terbaru yang periodenya tidak melewati bulan laporan.
+  let lIdx=-1; dataLBKBCache.forEach(r=>{const i=Number(r.bulan)-1;if(Number(r.tahun||2026)===y&&i<=mi&&r.realisasi!=null)lIdx=Math.max(lIdx,i);});
+  const lb=lIdx>=0?dataLBKBCache.find(r=>Number(r.tahun||2026)===y&&Number(r.bulan)===lIdx+1):null; const lr=lb&&lb.realisasi!=null?Number(lb.realisasi):null, lt=lb&&lb.target!=null?Number(lb.target):null, lp=(lr!=null&&lt)?100*lr/lt:null; const lStatus=statusKinerja(lp); setReportCard('rptLBKBCard','rptLBKBStatus',lStatus);
+  document.getElementById('rptLBKBPeriod').textContent=lIdx>=0?'Data final · '+NAMA_BULAN_REPORT[lIdx]+' '+y:'Belum ada data final'; document.getElementById('rptLBKBPct').textContent=pctReport(lp); document.getElementById('rptLBKBCaption').textContent=lr==null?'Belum ada realisasi':'Realisasi '+pctReport(lr)+' dari target '+pctReport(lt); document.getElementById('rptLBKBTarget').textContent=pctReport(lt); document.getElementById('rptLBKBValue').textContent=pctReport(lr); setReportBar('rptLBKBBar',lp);
+
+  const statuses=[pStatus,mStatus,sStatus,lStatus]; const good=statuses.filter(x=>x.cls==='good').length; const attn=4-good;
+  document.getElementById('rptGoodCount').textContent=good+' tercapai'; document.getElementById('rptAttnCount').textContent=attn+' perlu perhatian';
+}
+
+async function downloadLaporanPNG(){
+  renderLaporanHarian();
+  const btn=document.getElementById('btnDownloadLaporan'); const old=btn.textContent; btn.disabled=true; btn.textContent='Membuat PNG...';
+  try{
+    const canvas=await html2canvas(document.getElementById('reportSheet'),{scale:2,backgroundColor:'#f6f8fb',useCORS:true,logging:false});
+    const a=document.createElement('a'); const tanggal=document.getElementById('tanggalLaporan').value || isoLokal(new Date()); a.download='Kilas-Kinerja-TE-'+tanggal+'.png'; a.href=canvas.toDataURL('image/png'); a.click();
+  }catch(err){ console.error(err); alert('Gagal membuat PNG. Coba refresh halaman lalu ulangi.'); }
+  finally{btn.disabled=false;btn.textContent=old;}
+}
+
+document.getElementById('tanggalLaporan').value=isoLokal(new Date());
+document.getElementById('tanggalLaporan').addEventListener('change',renderLaporanHarian);
+
+
 /* ==============================
    START
 ============================== */
@@ -2162,12 +2465,51 @@ async function mulai() {
   await ambilDataSusut();
 
   renderOverviewEksekutif();
+  renderLaporanHarian();
 
 }
 
 mulai();
 setInterval(updateOverviewClock, 1000);
   
+
+/* =========================
+   SIMPLE ACCESS GATE
+========================= */
+const ACCESS_PASSWORD = 'pln123';
+const accessGate = document.getElementById('accessGate');
+const accessForm = document.getElementById('accessForm');
+const accessPassword = document.getElementById('accessPassword');
+const loginError = document.getElementById('loginError');
+const togglePassword = document.getElementById('togglePassword');
+
+function unlockSite() {
+  document.body.classList.remove('locked');
+  accessGate.classList.add('hidden');
+  sessionStorage.setItem('tebynu_access', 'ok');
+}
+
+if (sessionStorage.getItem('tebynu_access') === 'ok') unlockSite();
+
+accessForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+  if (accessPassword.value === ACCESS_PASSWORD) {
+    loginError.textContent = '';
+    unlockSite();
+  } else {
+    loginError.textContent = 'Password salah. Coba lagi.';
+    accessPassword.value = '';
+    accessPassword.focus();
+  }
+});
+
+togglePassword.addEventListener('click', function() {
+  const show = accessPassword.type === 'password';
+  accessPassword.type = show ? 'text' : 'password';
+  togglePassword.textContent = show ? '🙈' : '👁';
+  accessPassword.focus();
+});
+
 </script>
 
 </body>

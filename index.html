@@ -219,6 +219,21 @@
       color: #667085;
     }
 
+    .persen-badge {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: white;
+      vertical-align: middle;
+    }
+
+    .persen-merah { background: #dc2626; }
+    .persen-kuning { background: #d99a00; color: #172033; }
+    .persen-hijau { background: #16a34a; }
+
     .status {
       margin-top: 15px;
       font-size: 14px;
@@ -831,20 +846,7 @@
     });
 
 
-    document
-      .getElementById("realisasiP2TL")
-      .textContent =
-      "Realisasi: " +
-      formatAngka(totalP2TL) +
-      " kWh";
-
-
-    document
-      .getElementById("realisasiMeter")
-      .textContent =
-      "Realisasi: " +
-      formatAngka(totalMeter) +
-      " pelanggan";
+    // Teks realisasi + badge persentase diisi setelah persentase dihitung.
 
 
     const targetP2TL =
@@ -882,6 +884,23 @@
         (totalMeter / targetMeter) * 100;
 
     }
+
+
+    function kelasPersen(persen) {
+      if (persen >= 91) return "persen-hijau";
+      if (persen >= 80) return "persen-kuning";
+      return "persen-merah";
+    }
+
+    document.getElementById("realisasiP2TL").innerHTML =
+      "Realisasi: " + formatAngka(totalP2TL) + " kWh" +
+      '<span class="persen-badge ' + kelasPersen(persenP2TL) + '">' +
+      persenP2TL.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%</span>";
+
+    document.getElementById("realisasiMeter").innerHTML =
+      "Realisasi: " + formatAngka(totalMeter) + " pelanggan" +
+      '<span class="persen-badge ' + kelasPersen(persenMeter) + '">' +
+      persenMeter.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%</span>";
 
 
     document

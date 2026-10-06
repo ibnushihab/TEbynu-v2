@@ -382,8 +382,12 @@
     <h2>Monitoring Susut Distribusi 2026</h2>
 
     <div class="panel">
-      <h3>Susut Kumulatif — Jan s.d. Des</h3>
-      <p class="note">Setiap bulan dihitung kumulatif: Januari; Jan+Feb; Jan+Feb+Mar; dan seterusnya.</p>
+      <h3 id="judulGrafikSusut">Susut Kumulatif — Realisasi vs Target</h3>
+      <div class="periode" id="periodeSusut">
+        <button type="button" data-mode="bulanan">Susut Bulanan</button>
+        <button type="button" class="active" data-mode="kumulatif">Susut Kumulatif</button>
+      </div>
+      <p class="note" id="catatanSusut">Kumulatif: Jan; Jan+Feb; Jan+Feb+Mar; dan seterusnya. Target dibaca dari Supabase.</p>
       <div style="height:360px;">
         <canvas id="chartSusut"></canvas>
       </div>
@@ -1711,37 +1715,55 @@ document.querySelectorAll(".periode").forEach(group => {
 
 
 /* ==============================
-   GRAFIK SUSUT KUMULATIF
+   GRAFIK SUSUT
 ============================== */
 
 let chartSusut = null;
+let modeSusut = 'kumulatif';
+let dataSusutCache = [];
+let targetSusutCache = [];
+
+function hitungSusut(row) {
+  const penerimaan = Number(row.penerimaan || 0);
+  if (!penerimaan) return null;
+  return ((
+    penerimaan
+    - Number(row.jual_tm || 0)
+    - Number(row.jual_tr || 0)
+    - Number(row.kirim_unit_lain || 0)
+    - Number(row.pemakaian_sendiri || 0)
+    + Number(row.emin_tm || 0)
+    + Number(row.emin_tr || 0)
+  ) / penerimaan) * 100;
+}
 
 async function ambilDataSusut() {
-  const { data, error } = await db
-    .from('susut_bulanan')
-    .select('*')
-    .eq('tahun', 2026)
-    .order('bulan', { ascending: true });
+  const [susutRes, targetRes] = await Promise.all([
+    db.from('susut_bulanan').select('*').eq('tahun', 2026).order('bulan', { ascending: true }),
+    db.from('target_susut').select('bulan,target_susut').eq('tahun', 2026).order('bulan', { ascending: true })
+  ]);
 
-  if (error) {
-    console.error('Gagal mengambil data susut:', error);
+  if (susutRes.error) {
+    console.error('Gagal mengambil data susut:', susutRes.error);
     return;
   }
+  if (targetRes.error) {
+    console.error('Gagal mengambil target susut:', targetRes.error);
+  }
 
-  const namaBulan = [
-    'Jan','Feb','Mar','Apr','Mei','Jun',
-    'Jul','Agu','Sep','Okt','Nov','Des'
-  ];
+  dataSusutCache = susutRes.data || [];
+  targetSusutCache = targetRes.data || [];
+  renderGrafikSusut();
+}
 
+function renderGrafikSusut() {
+  const namaBulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
   const perBulan = Array.from({ length: 12 }, (_, i) => ({
-    bulan: i + 1,
-    ada: false,
-    penerimaan: 0, jual_tm: 0, jual_tr: 0,
-    kirim_unit_lain: 0, pemakaian_sendiri: 0,
-    emin_tm: 0, emin_tr: 0
+    bulan: i + 1, ada: false, penerimaan: 0, jual_tm: 0, jual_tr: 0,
+    kirim_unit_lain: 0, pemakaian_sendiri: 0, emin_tm: 0, emin_tr: 0
   }));
 
-  (data || []).forEach(row => {
+  dataSusutCache.forEach(row => {
     const i = Number(row.bulan) - 1;
     if (i < 0 || i > 11) return;
     perBulan[i] = {
@@ -1756,70 +1778,55 @@ async function ambilDataSusut() {
     };
   });
 
-  const total = {
-    penerimaan: 0, jual_tm: 0, jual_tr: 0,
-    kirim_unit_lain: 0, pemakaian_sendiri: 0,
-    emin_tm: 0, emin_tr: 0
-  };
-
-  let sudahAdaData = false;
+  const susutBulanan = perBulan.map(row => row.ada ? hitungSusut(row) : null);
+  const total = { penerimaan:0, jual_tm:0, jual_tr:0, kirim_unit_lain:0, pemakaian_sendiri:0, emin_tm:0, emin_tr:0 };
   const susutKumulatif = perBulan.map(row => {
     if (!row.ada) return null;
-    sudahAdaData = true;
-
-    Object.keys(total).forEach(k => total[k] += row[k]);
-
-    if (!total.penerimaan) return null;
-
-    return (
-      (
-        total.penerimaan
-        - total.jual_tm
-        - total.jual_tr
-        - total.kirim_unit_lain
-        - total.pemakaian_sendiri
-        + total.emin_tm
-        + total.emin_tr
-      ) / total.penerimaan
-    ) * 100;
+    Object.keys(total).forEach(k => total[k] += Number(row[k] || 0));
+    return hitungSusut(total);
   });
 
-  if (chartSusut) chartSusut.destroy();
+  const targetKumulatif = Array(12).fill(null);
+  targetSusutCache.forEach(row => {
+    const i = Number(row.bulan) - 1;
+    if (i >= 0 && i < 12) targetKumulatif[i] = Number(row.target_susut);
+  });
 
+  const datasets = modeSusut === 'bulanan'
+    ? [{ label:'Realisasi Susut Bulanan (%)', data:susutBulanan, borderWidth:3, tension:0.25, pointRadius:5, spanGaps:false }]
+    : [
+        { label:'Realisasi Susut Kumulatif (%)', data:susutKumulatif, borderWidth:3, tension:0.25, pointRadius:5, spanGaps:false },
+        { label:'Target Susut Kumulatif (%)', data:targetKumulatif, borderWidth:2, tension:0.15, pointRadius:4, spanGaps:false }
+      ];
+
+  document.getElementById('judulGrafikSusut').textContent = modeSusut === 'bulanan'
+    ? 'Susut Bulanan — Realisasi per Bulan'
+    : 'Susut Kumulatif — Realisasi vs Target';
+  document.getElementById('catatanSusut').textContent = modeSusut === 'bulanan'
+    ? 'Menampilkan susut masing-masing bulan secara berdiri sendiri.'
+    : 'Kumulatif: Jan; Jan+Feb; Jan+Feb+Mar; dan seterusnya. Target dibaca dari Supabase.';
+
+  if (chartSusut) chartSusut.destroy();
   chartSusut = new Chart(document.getElementById('chartSusut'), {
-    type: 'line',
-    data: {
-      labels: namaBulan,
-      datasets: [{
-        label: 'Realisasi Susut Kumulatif (%)',
-        data: susutKumulatif,
-        borderWidth: 3,
-        tension: 0.25,
-        pointRadius: 5,
-        spanGaps: false
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        tooltip: {
-          callbacks: {
-            label: ctx => ctx.raw == null
-              ? 'Belum ada data'
-              : `Susut kumulatif: ${Number(ctx.raw).toFixed(2)}%`
-          }
-        }
-      },
-      scales: {
-        y: {
-          ticks: { callback: value => Number(value).toFixed(2) + '%' }
-        }
-      }
+    type:'line',
+    data:{ labels:namaBulan, datasets },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ tooltip:{ callbacks:{ label:ctx => ctx.raw == null ? `${ctx.dataset.label}: belum ada data` : `${ctx.dataset.label}: ${Number(ctx.raw).toFixed(2)}%` } } },
+      scales:{ y:{ ticks:{ callback:value => Number(value).toFixed(2) + '%' } } }
     }
   });
 }
+
+document.querySelectorAll('#periodeSusut button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#periodeSusut button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    modeSusut = btn.dataset.mode;
+    renderGrafikSusut();
+  });
+});
 
 
 /* ==============================

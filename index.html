@@ -267,6 +267,34 @@
         padding: 18px 14px;
       }
     }
+
+
+    /* OVERVIEW EKSEKUTIF */
+    .overview-head { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; margin-bottom:20px; }
+    .overview-head h2 { margin-bottom:4px; }
+    .overview-period { font-size:14px; color:#667085; font-weight:700; }
+    .overview-clock { text-align:right; }
+    .overview-clock .date { font-size:14px; color:#667085; font-weight:700; }
+    .overview-clock .time { font-size:26px; color:#101828; font-weight:900; letter-spacing:-.5px; margin-top:2px; }
+    .kpi-period { font-size:11px; font-weight:800; color:#667085; background:#f2f4f7; border-radius:999px; padding:5px 8px; display:inline-block; margin-bottom:10px; }
+    .overview-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+    .kpi-card { background:#fff; border:1px solid #eaecf0; border-radius:18px; padding:22px; box-shadow:0 5px 18px rgba(16,24,40,.06); position:relative; overflow:hidden; }
+    .kpi-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:5px; background:#98a2b3; }
+    .kpi-card.ok::before { background:#16a34a; } .kpi-card.warn::before { background:#f59e0b; } .kpi-card.bad::before { background:#dc2626; }
+    .kpi-top { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; }
+    .kpi-title { font-size:15px; font-weight:800; color:#344054; }
+    .kpi-status { border-radius:999px; padding:6px 10px; font-size:12px; font-weight:800; background:#f2f4f7; color:#475467; }
+    .kpi-card.ok .kpi-status { background:#dcfce7; color:#15803d; } .kpi-card.warn .kpi-status { background:#fef3c7; color:#b45309; } .kpi-card.bad .kpi-status { background:#fee2e2; color:#b91c1c; }
+    .kpi-main { display:flex; align-items:baseline; gap:8px; margin-bottom:4px; }
+    .kpi-main strong { font-size:34px; line-height:1; letter-spacing:-1px; color:#101828; }
+    .kpi-main span { color:#667085; font-size:13px; font-weight:700; }
+    .kpi-sub { color:#667085; font-size:13px; margin-bottom:16px; min-height:20px; }
+    .kpi-metrics { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .kpi-metric { background:#f8fafc; border-radius:12px; padding:11px 12px; }
+    .kpi-metric small { display:block; color:#667085; font-size:11px; margin-bottom:4px; }
+    .kpi-metric b { font-size:15px; color:#344054; }
+    @media(max-width:760px){ .overview-grid{grid-template-columns:1fr;} .overview-head{align-items:flex-start;flex-direction:column;} }
+
   </style>
 </head>
 
@@ -279,8 +307,13 @@
 
 <nav>
   <button class="tab active"
+          onclick="bukaHalaman('overview', this)">
+    Overview
+  </button>
+
+  <button class="tab"
           onclick="bukaHalaman('dashboard', this)">
-    P2TL Harmet LBKB
+    Dashboard
   </button>
 
   <button class="tab"
@@ -305,7 +338,44 @@
        DASHBOARD
   ========================== -->
 
-  <section id="dashboard" class="page active">
+  <section id="overview" class="page active">
+    <div class="overview-head">
+      <div><h2>Kilas Kinerja</h2><div class="overview-period" id="overviewPeriode">Memuat periode terakhir...</div></div>
+      <div class="overview-clock"><div class="date" id="overviewTanggal">–</div><div class="time" id="overviewJam">–</div></div>
+    </div>
+
+    <div class="overview-grid">
+      <div class="kpi-card" id="ovP2TL">
+        <div class="kpi-top"><div class="kpi-title">P2TL</div><div class="kpi-status" id="ovP2TLStatus">Memuat</div></div><div class="kpi-period" id="ovP2TLPeriode">Update harian</div>
+        <div class="kpi-main"><strong id="ovP2TLPersen">–</strong><span>target bulan</span></div>
+        <div class="kpi-sub" id="ovP2TLRealisasi">–</div>
+        <div class="kpi-metrics"><div class="kpi-metric"><small>Pencapaian target tahunan</small><b id="ovP2TLTahunan">–</b></div><div class="kpi-metric"><small id="ovP2TLTargetLabel">Target bulan</small><b id="ovP2TLTarget">–</b></div></div>
+      </div>
+
+      <div class="kpi-card" id="ovSusut">
+        <div class="kpi-top"><div class="kpi-title">Susut Distribusi</div><div class="kpi-status" id="ovSusutStatus">Memuat</div></div><div class="kpi-period" id="ovSusutPeriode">Data bulanan</div>
+        <div class="kpi-main"><strong id="ovSusutRealisasi">–</strong><span>susut kumulatif</span></div>
+        <div class="kpi-sub" id="ovSusutGap">–</div>
+        <div class="kpi-metrics"><div class="kpi-metric"><small id="ovSusutTargetLabel">Target kumulatif</small><b id="ovSusutTarget">–</b></div><div class="kpi-metric"><small>Posisi terhadap target</small><b id="ovSusutPosisi">–</b></div></div>
+      </div>
+
+      <div class="kpi-card" id="ovMeter">
+        <div class="kpi-top"><div class="kpi-title">Ganti kWh Meter</div><div class="kpi-status" id="ovMeterStatus">Memuat</div></div><div class="kpi-period" id="ovMeterPeriode">Update harian</div>
+        <div class="kpi-main"><strong id="ovMeterPersen">–</strong><span>target bulan</span></div>
+        <div class="kpi-sub" id="ovMeterRealisasi">–</div>
+        <div class="kpi-metrics"><div class="kpi-metric"><small>Pencapaian target tahunan</small><b id="ovMeterTahunan">–</b></div><div class="kpi-metric"><small id="ovMeterTargetLabel">Target bulan</small><b id="ovMeterTarget">–</b></div></div>
+      </div>
+
+      <div class="kpi-card" id="ovLBKB">
+        <div class="kpi-top"><div class="kpi-title">LBKB</div><div class="kpi-status" id="ovLBKBStatus">Memuat</div></div><div class="kpi-period" id="ovLBKBPeriode">Data bulanan</div>
+        <div class="kpi-main"><strong id="ovLBKBPersen">–</strong><span>pencapaian</span></div>
+        <div class="kpi-sub" id="ovLBKBRealisasi">–</div>
+        <div class="kpi-metrics"><div class="kpi-metric"><small id="ovLBKBTargetLabel">Target bulan</small><b id="ovLBKBTarget">–</b></div><div class="kpi-metric"><small>Realisasi</small><b id="ovLBKBNilai">–</b></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="dashboard" class="page">
 
     <h2>Dashboard Monitoring</h2>
 
@@ -1768,6 +1838,7 @@ document.querySelectorAll(".periode").forEach(group => {
 ============================== */
 
 let chartLBKB = null;
+let dataLBKBCache = [];
 
 async function ambilDataLBKB() {
   const { data, error } = await db
@@ -1781,6 +1852,8 @@ async function ambilDataLBKB() {
     document.getElementById('periodeLBKB').textContent = 'Data LBKB belum dapat dibaca';
     return;
   }
+
+  dataLBKBCache = data || [];
 
   const namaBulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
   const target = Array(12).fill(null);
@@ -2004,6 +2077,74 @@ document.querySelectorAll('#periodeSusut button').forEach(btn => {
 });
 
 
+
+/* ==============================
+   OVERVIEW EKSEKUTIF
+============================== */
+function persenID(v){ return v==null || !Number.isFinite(Number(v)) ? '–' : Number(v).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+'%'; }
+function setKpiStatus(cardId,statusId,ok,label){ const card=document.getElementById(cardId); card.classList.remove('ok','warn','bad'); card.classList.add(ok?'ok':'bad'); document.getElementById(statusId).textContent=label; }
+
+function formatTanggalID(date){
+  return date.toLocaleDateString('id-ID',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+}
+function updateOverviewClock(){
+  const now=new Date();
+  const t=document.getElementById('overviewTanggal'), j=document.getElementById('overviewJam');
+  if(t) t.textContent=formatTanggalID(now);
+  if(j) j.textContent=now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})+' WIB';
+}
+function renderOverviewEksekutif(){
+  const nama=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const now=new Date();
+  const currentYear=now.getFullYear();
+  const currentIdx=now.getMonth();
+  document.getElementById('overviewPeriode').textContent='Ringkasan kinerja terkini';
+  updateOverviewClock();
+
+  // P2TL & Ganti Meter: harian, mengikuti bulan kalender saat ini.
+  const annualP=Number(document.getElementById('targetP2TL').value||0);
+  const annualM=Number(document.getElementById('targetMeter').value||0);
+  const monthTargetP=annualP/12, monthTargetM=annualM/12;
+  let pMonth=0,mMonth=0,pYtd=0,mYtd=0;
+  let latestDailyDate=null;
+  dataHarianGrafik.forEach(r=>{
+    if(!r.tanggal) return;
+    const a=String(r.tanggal).split('-'); const yr=Number(a[0]), mi=Number(a[1])-1;
+    if(yr!==currentYear) return;
+    const d=new Date(Number(a[0]),Number(a[1])-1,Number(a[2]));
+    if(!latestDailyDate || d>latestDailyDate) latestDailyDate=d;
+    if(mi===currentIdx){pMonth+=Number(r.p2tl_kwh||0);mMonth+=Number(r.ganti_meter||0);}
+    if(mi<=currentIdx){pYtd+=Number(r.p2tl_kwh||0);mYtd+=Number(r.ganti_meter||0);}
+  });
+  const pMonthPct=monthTargetP?100*pMonth/monthTargetP:0, mMonthPct=monthTargetM?100*mMonth/monthTargetM:0;
+  const dailyLabel=latestDailyDate?'Update s.d. '+latestDailyDate.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}):'Belum ada data harian';
+  document.getElementById('ovP2TLPeriode').textContent=dailyLabel;
+  document.getElementById('ovMeterPeriode').textContent=dailyLabel;
+  document.getElementById('ovP2TLPersen').textContent=persenID(pMonthPct); document.getElementById('ovP2TLRealisasi').textContent=formatAngka(pMonth)+' kWh realisasi '+nama[currentIdx];
+  document.getElementById('ovP2TLTahunan').textContent=persenID(annualP?100*pYtd/annualP:0); document.getElementById('ovP2TLTargetLabel').textContent='Target '+nama[currentIdx]; document.getElementById('ovP2TLTarget').textContent=formatAngka(monthTargetP)+' kWh';
+  setKpiStatus('ovP2TL','ovP2TLStatus',pMonthPct>=100,pMonthPct>=100?'Tercapai':'Belum Tercapai');
+  document.getElementById('ovMeterPersen').textContent=persenID(mMonthPct); document.getElementById('ovMeterRealisasi').textContent=formatAngka(mMonth)+' pelanggan realisasi '+nama[currentIdx];
+  document.getElementById('ovMeterTahunan').textContent=persenID(annualM?100*mYtd/annualM:0); document.getElementById('ovMeterTargetLabel').textContent='Target '+nama[currentIdx]; document.getElementById('ovMeterTarget').textContent=formatAngka(monthTargetM)+' pelanggan';
+  setKpiStatus('ovMeter','ovMeterStatus',mMonthPct>=100,mMonthPct>=100?'Tercapai':'Belum Tercapai');
+
+  // Susut: selalu memakai bulan final terbaru yang tersedia, independen dari data harian.
+  let sIdx=-1; dataSusutCache.forEach(r=>{const i=Number(r.bulan)-1;if(i>=0&&i<12&&Number(r.penerimaan||0)>0)sIdx=Math.max(sIdx,i);});
+  const per=Array(12).fill(null); dataSusutCache.forEach(r=>{const i=Number(r.bulan)-1;if(i>=0&&i<12)per[i]=r;});
+  const total={penerimaan:0,jual_tm:0,jual_tr:0,kirim_unit_lain:0,pemakaian_sendiri:0,emin_tm:0,emin_tr:0}; let sKum=null;
+  if(sIdx>=0){ for(let i=0;i<=sIdx;i++){const r=per[i];if(!r)continue;Object.keys(total).forEach(k=>total[k]+=Number(r[k]||0));sKum=hitungSusut(total);} }
+  const tr=sIdx>=0?targetSusutCache.find(r=>Number(r.bulan)===sIdx+1):null; const sTarget=tr?Number(tr.target_susut):null; const sOk=sKum!=null&&sTarget!=null&&sKum<=sTarget; const sGap=(sKum!=null&&sTarget!=null)?sKum-sTarget:null;
+  document.getElementById('ovSusutPeriode').textContent=sIdx>=0?'Realisasi final s.d. '+nama[sIdx]+' 2026':'Belum ada data bulanan';
+  document.getElementById('ovSusutRealisasi').textContent=persenID(sKum); document.getElementById('ovSusutTargetLabel').textContent=sIdx>=0?'Target kumulatif '+nama[sIdx]:'Target kumulatif'; document.getElementById('ovSusutTarget').textContent=persenID(sTarget);
+  document.getElementById('ovSusutGap').textContent=sGap==null?'–':(sGap<=0?'Lebih rendah ':'Lebih tinggi ')+Math.abs(sGap).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+' poin'; document.getElementById('ovSusutPosisi').textContent=sGap==null?'–':(sGap>0?'+':'')+sGap.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+' poin';
+  setKpiStatus('ovSusut','ovSusutStatus',sOk,sKum==null?'Belum Ada Data':(sOk?'Tercapai':'Belum Tercapai'));
+
+  // LBKB: bulan terbaru yang realisasinya sudah diisi, independen dari Susut.
+  let lIdx=-1; dataLBKBCache.forEach(r=>{const i=Number(r.bulan)-1;if(i>=0&&i<12&&r.realisasi!=null)lIdx=Math.max(lIdx,i);});
+  const lb=lIdx>=0?dataLBKBCache.find(r=>Number(r.bulan)===lIdx+1):null; const lr=lb&&lb.realisasi!=null?Number(lb.realisasi):null, lt=lb&&lb.target!=null?Number(lb.target):null; const lp=(lr!=null&&lt)?100*lr/lt:null, lok=lp!=null&&lp>=100;
+  document.getElementById('ovLBKBPeriode').textContent=lIdx>=0?'Realisasi final '+nama[lIdx]+' 2026':'Belum ada data bulanan';
+  document.getElementById('ovLBKBPersen').textContent=persenID(lp); document.getElementById('ovLBKBRealisasi').textContent=lr==null?'Belum ada realisasi':('Realisasi '+nama[lIdx]+' '+persenID(lr)); document.getElementById('ovLBKBTargetLabel').textContent=lIdx>=0?'Target '+nama[lIdx]:'Target bulan'; document.getElementById('ovLBKBTarget').textContent=persenID(lt); document.getElementById('ovLBKBNilai').textContent=persenID(lr);
+  setKpiStatus('ovLBKB','ovLBKBStatus',lok,lp==null?'Belum Ada Data':(lok?'Tercapai':'Belum Tercapai'));
+}
 /* ==============================
    START
 ============================== */
@@ -2020,9 +2161,12 @@ async function mulai() {
 
   await ambilDataSusut();
 
+  renderOverviewEksekutif();
+
 }
 
 mulai();
+setInterval(updateOverviewClock, 1000);
   
 </script>
 

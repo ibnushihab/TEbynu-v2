@@ -1283,117 +1283,72 @@ async function ambilDataGrafik() {
 
 function kelompokkanData(mode) {
 
-  const hasil = {};
-
-  // BULANAN: selalu buat Januari - Desember
+  // BULANAN: URUTAN DIKUNCI JANUARI -> DESEMBER
   if (mode === "bulanan") {
-
     const namaBulan = [
-      "Jan", "Feb", "Mar", "Apr",
-      "Mei", "Jun", "Jul", "Agu",
-      "Sep", "Okt", "Nov", "Des"
+      "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
+      "Jul", "Agu", "Sep", "Okt", "Nov", "Des"
     ];
 
-    namaBulan.forEach((nama, index) => {
-
-      const key = String(index + 1).padStart(2, "0");
-
-      hasil[key] = {
-        label: nama,
-        p2tl: 0,
-        meter: 0
-      };
-
-    });
-
+    const bulanan = namaBulan.map((nama, index) => ({
+      bulan: index,
+      label: nama,
+      p2tl: 0,
+      meter: 0
+    }));
 
     dataHarianGrafik.forEach(row => {
-
       if (!row.tanggal) return;
 
-      const tanggal = new Date(row.tanggal + "T00:00:00");
+      const bagian = String(row.tanggal).split("-");
+      const tahunData = Number(bagian[0]);
+      const bulanData = Number(bagian[1]) - 1;
 
-      const bulan =
-        String(tanggal.getMonth() + 1).padStart(2, "0");
+      // Dashboard tahun 2026
+      if (tahunData !== 2026) return;
+      if (bulanData < 0 || bulanData > 11) return;
 
-      if (!hasil[bulan]) return;
-
-      hasil[bulan].p2tl +=
-        Number(row.p2tl_kwh || 0);
-
-      hasil[bulan].meter +=
-        Number(row.ganti_meter || 0);
-
+      bulanan[bulanData].p2tl += Number(row.p2tl_kwh || 0);
+      bulanan[bulanData].meter += Number(row.ganti_meter || 0);
     });
 
-    return Object.values(hasil);
+    // Array ini SELALU Jan, Feb, Mar ... Des. Tidak di-sort dari data.
+    return bulanan;
   }
 
+  // MINGGUAN / HARIAN tetap tersedia
+  const hasil = {};
 
-  // MINGGUAN / HARIAN
   dataHarianGrafik.forEach(row => {
-
     if (!row.tanggal) return;
 
-    const tanggal =
-      new Date(row.tanggal + "T00:00:00");
+    const tanggal = new Date(row.tanggal + "T00:00:00");
+    if (tanggal.getFullYear() !== 2026) return;
 
     let key;
     let label;
 
-
     if (mode === "mingguan") {
-
-      const minggu =
-        Math.ceil(tanggal.getDate() / 7);
-
-      key =
-        `${tanggal.getFullYear()}-${tanggal.getMonth() + 1}-${minggu}`;
-
-      label =
-        `M${minggu} ${tanggal.toLocaleDateString(
-          "id-ID",
-          { month: "short" }
-        )}`;
-
+      const minggu = Math.ceil(tanggal.getDate() / 7);
+      key = `${tanggal.getFullYear()}-${String(tanggal.getMonth() + 1).padStart(2,"0")}-${minggu}`;
+      label = `M${minggu} ${tanggal.toLocaleDateString("id-ID", { month: "short" })}`;
     } else {
-
       key = row.tanggal;
-
-      label =
-        tanggal.toLocaleDateString(
-          "id-ID",
-          {
-            day: "2-digit",
-            month: "short"
-          }
-        );
+      label = tanggal.toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
     }
-
 
     if (!hasil[key]) {
-
-      hasil[key] = {
-        label: label,
-        p2tl: 0,
-        meter: 0
-      };
-
+      hasil[key] = { label, p2tl: 0, meter: 0 };
     }
 
-
-    hasil[key].p2tl +=
-      Number(row.p2tl_kwh || 0);
-
-    hasil[key].meter +=
-      Number(row.ganti_meter || 0);
-
+    hasil[key].p2tl += Number(row.p2tl_kwh || 0);
+    hasil[key].meter += Number(row.ganti_meter || 0);
   });
 
-
-  return Object.values(hasil);
+  return Object.keys(hasil)
+    .sort()
+    .map(key => hasil[key]);
 }
-
 
 /* ==============================
    TARGET PER PERIODE

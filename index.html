@@ -322,7 +322,13 @@
 
       <h3>P2TL — Target vs Realisasi</h3>
 
-      <div style="height:330px;">
+      <div class="periode">
+  <button class="active">Bulanan</button>
+  <button>Mingguan</button>
+  <button>Harian</button>
+</div>
+
+<div style="height:330px;">
   <canvas id="chartP2TL"></canvas>
 </div>
 
@@ -333,7 +339,13 @@
 
       <h3>Ganti kWh Meter — Target vs Realisasi</h3>
 
-      <div style="height:330px;">
+      <div class="periode">
+  <button class="active">Bulanan</button>
+  <button>Mingguan</button>
+  <button>Harian</button>
+</div>
+
+<div style="height:330px;">
   <canvas id="chartMeter"></canvas>
 </div>
 
@@ -1061,6 +1073,7 @@
     await ambilTarget();
 
     await ambilRealisasi();
+    await ambilDataGrafik();
 
   }
 
@@ -1185,6 +1198,7 @@
     await ambilTarget();
 
     await ambilRealisasi();
+    await ambilDataGrafik();
 
   }
 

@@ -1710,7 +1710,119 @@ document.querySelectorAll(".periode").forEach(group => {
 });
 
 
-/* ==============================\n   GRAFIK SUSUT KUMULATIF\n============================== */\n\nlet chartSusut = null;\n\nasync function ambilDataSusut() {\n  const { data, error } = await db\n    .from('susut_bulanan')\n    .select('*')\n    .eq('tahun', 2026)\n    .order('bulan', { ascending: true });\n\n  if (error) {\n    console.error('Gagal mengambil data susut:', error);\n    return;\n  }\n\n  const namaBulan = [\n    'Jan','Feb','Mar','Apr','Mei','Jun',\n    'Jul','Agu','Sep','Okt','Nov','Des'\n  ];\n\n  const perBulan = Array.from({ length: 12 }, (_, i) => ({\n    bulan: i + 1,\n    ada: false,\n    penerimaan: 0, jual_tm: 0, jual_tr: 0,\n    kirim_unit_lain: 0, pemakaian_sendiri: 0,\n    emin_tm: 0, emin_tr: 0\n  }));\n\n  (data || []).forEach(row => {\n    const i = Number(row.bulan) - 1;\n    if (i < 0 || i > 11) return;\n    perBulan[i] = {\n      bulan: i + 1, ada: true,\n      penerimaan: Number(row.penerimaan || 0),\n      jual_tm: Number(row.jual_tm || 0),\n      jual_tr: Number(row.jual_tr || 0),\n      kirim_unit_lain: Number(row.kirim_unit_lain || 0),\n      pemakaian_sendiri: Number(row.pemakaian_sendiri || 0),\n      emin_tm: Number(row.emin_tm || 0),\n      emin_tr: Number(row.emin_tr || 0)\n    };\n  });\n\n  const total = {\n    penerimaan: 0, jual_tm: 0, jual_tr: 0,\n    kirim_unit_lain: 0, pemakaian_sendiri: 0,\n    emin_tm: 0, emin_tr: 0\n  };\n\n  let sudahAdaData = false;\n  const susutKumulatif = perBulan.map(row => {\n    if (!row.ada) return null;\n    sudahAdaData = true;\n\n    Object.keys(total).forEach(k => total[k] += row[k]);\n\n    if (!total.penerimaan) return null;\n\n    return (\n      (\n        total.penerimaan\n        - total.jual_tm\n        - total.jual_tr\n        - total.kirim_unit_lain\n        - total.pemakaian_sendiri\n        + total.emin_tm\n        + total.emin_tr\n      ) / total.penerimaan\n    ) * 100;\n  });\n\n  if (chartSusut) chartSusut.destroy();\n\n  chartSusut = new Chart(document.getElementById('chartSusut'), {\n    type: 'line',\n    data: {\n      labels: namaBulan,\n      datasets: [{\n        label: 'Realisasi Susut Kumulatif (%)',\n        data: susutKumulatif,\n        borderWidth: 3,\n        tension: 0.25,\n        pointRadius: 5,\n        spanGaps: false\n      }]\n    },\n    options: {\n      responsive: true,\n      maintainAspectRatio: false,\n      interaction: { mode: 'index', intersect: false },\n      plugins: {\n        tooltip: {\n          callbacks: {\n            label: ctx => ctx.raw == null\n              ? 'Belum ada data'\n              : `Susut kumulatif: ${Number(ctx.raw).toFixed(2)}%`\n          }\n        }\n      },\n      scales: {\n        y: {\n          ticks: { callback: value => Number(value).toFixed(2) + '%' }\n        }\n      }\n    }\n  });\n}\n\n\n/* ==============================
+/* ==============================
+   GRAFIK SUSUT KUMULATIF
+============================== */
+
+let chartSusut = null;
+
+async function ambilDataSusut() {
+  const { data, error } = await db
+    .from('susut_bulanan')
+    .select('*')
+    .eq('tahun', 2026)
+    .order('bulan', { ascending: true });
+
+  if (error) {
+    console.error('Gagal mengambil data susut:', error);
+    return;
+  }
+
+  const namaBulan = [
+    'Jan','Feb','Mar','Apr','Mei','Jun',
+    'Jul','Agu','Sep','Okt','Nov','Des'
+  ];
+
+  const perBulan = Array.from({ length: 12 }, (_, i) => ({
+    bulan: i + 1,
+    ada: false,
+    penerimaan: 0, jual_tm: 0, jual_tr: 0,
+    kirim_unit_lain: 0, pemakaian_sendiri: 0,
+    emin_tm: 0, emin_tr: 0
+  }));
+
+  (data || []).forEach(row => {
+    const i = Number(row.bulan) - 1;
+    if (i < 0 || i > 11) return;
+    perBulan[i] = {
+      bulan: i + 1, ada: true,
+      penerimaan: Number(row.penerimaan || 0),
+      jual_tm: Number(row.jual_tm || 0),
+      jual_tr: Number(row.jual_tr || 0),
+      kirim_unit_lain: Number(row.kirim_unit_lain || 0),
+      pemakaian_sendiri: Number(row.pemakaian_sendiri || 0),
+      emin_tm: Number(row.emin_tm || 0),
+      emin_tr: Number(row.emin_tr || 0)
+    };
+  });
+
+  const total = {
+    penerimaan: 0, jual_tm: 0, jual_tr: 0,
+    kirim_unit_lain: 0, pemakaian_sendiri: 0,
+    emin_tm: 0, emin_tr: 0
+  };
+
+  let sudahAdaData = false;
+  const susutKumulatif = perBulan.map(row => {
+    if (!row.ada) return null;
+    sudahAdaData = true;
+
+    Object.keys(total).forEach(k => total[k] += row[k]);
+
+    if (!total.penerimaan) return null;
+
+    return (
+      (
+        total.penerimaan
+        - total.jual_tm
+        - total.jual_tr
+        - total.kirim_unit_lain
+        - total.pemakaian_sendiri
+        + total.emin_tm
+        + total.emin_tr
+      ) / total.penerimaan
+    ) * 100;
+  });
+
+  if (chartSusut) chartSusut.destroy();
+
+  chartSusut = new Chart(document.getElementById('chartSusut'), {
+    type: 'line',
+    data: {
+      labels: namaBulan,
+      datasets: [{
+        label: 'Realisasi Susut Kumulatif (%)',
+        data: susutKumulatif,
+        borderWidth: 3,
+        tension: 0.25,
+        pointRadius: 5,
+        spanGaps: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.raw == null
+              ? 'Belum ada data'
+              : `Susut kumulatif: ${Number(ctx.raw).toFixed(2)}%`
+          }
+        }
+      },
+      scales: {
+        y: {
+          ticks: { callback: value => Number(value).toFixed(2) + '%' }
+        }
+      }
+    }
+  });
+}
+
+
+/* ==============================
    START
 ============================== */
 

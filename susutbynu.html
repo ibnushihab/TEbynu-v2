@@ -38,10 +38,10 @@ nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-
   <div class="drop" id="drop"><b>Upload Data Asset + Neraca + LM-LF</b><p class="desc">Workbook dapat berisi satu bulan atau histori beberapa bulan. Sistem mengambil periode yang dipilih di atas.</p><label class="btn" style="display:inline-block;margin-top:12px">Pilih Excel<input id="file" type="file" accept=".xlsx,.xls"></label><div class="fileName" id="fname">Belum ada file</div></div>
  </div>
  <div id="preview" class="preview">
-  <div class="card"><h3 style="margin-top:0">Preview — <span id="prevPeriod"></span></h3><div class="notice">Cek hasil dulu. Data baru masuk Monitoring setelah tombol <b>Simpan</b> ditekan.</div>
+  <div class="card"><h3 style="margin-top:0">Preview — <span id="prevPeriod"></span></h3><div class="notice">Cek hasil dulu. Preview menampilkan bulan terpilih. Saat disimpan, sistem menghitung ulang <b>semua bulan Januari–Desember yang sudah memiliki data</b> dengan Formula Jogja.</div>
    <div class="kpis"><div class="kpi"><div class="lab">Susut Distribusi</div><div class="val" id="pDist">–</div><div class="foot" id="pDistKwh"></div></div><div class="kpi"><div class="lab">Susut Teknis</div><div class="val" id="pTech">–</div><div class="foot" id="pTechKwh"></div></div><div class="kpi"><div class="lab">Susut Nonteknis</div><div class="val" id="pNon">–</div><div class="foot">Distribusi − Teknis</div></div></div>
    <div class="components" style="margin-top:14px"><div class="component"><div class="name">JTM</div><div class="num" id="pJtm">–</div></div><div class="component"><div class="name">Gardu / Trafo</div><div class="num" id="pGardu">–</div></div><div class="component"><div class="name">JTR</div><div class="num" id="pJtr">–</div></div><div class="component"><div class="name">SR</div><div class="num" id="pSr">–</div></div></div>
-   <div class="savebar"><span class="status" id="saveStatus"></span><button class="btn" id="saveBtn">Simpan Periode Ini</button></div>
+   <div class="savebar"><span class="status" id="saveStatus"></span><button class="btn" id="saveBtn">Hitung & Simpan Jan–Des</button></div>
   </div>
  </div>
 </section>
@@ -52,7 +52,7 @@ const SUPABASE_KEY='sb_publishable_spj0cvuxeqTxqyk__WQFmw_MfPQw1aJ';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const MONTHS=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 const $=id=>document.getElementById(id); const fmt=n=>new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(Number(n)||0); const pc=n=>fmt(n)+'%';
-let previewData=null, cache=[];
+let previewData=null, cache=[], currentExcelFile=null;
 function fillSelects(){const years=[2026,2027,2028,2029,2030]; ['monYear','cmpYear','upYear'].forEach(id=>$(id).innerHTML=years.map(y=>`<option ${y===2026?'selected':''}>${y}</option>`).join('')); ['monMonth','monthA','monthB','upMonth'].forEach(id=>$(id).innerHTML=MONTHS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('')); $('monMonth').value=8;$('monthA').value=5;$('monthB').value=6;$('upMonth').value=9}
 fillSelects();
 document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.navbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));$(b.dataset.panel).classList.add('active')});
@@ -64,7 +64,7 @@ function detectMonthColumn(rows,month){const hdr=rows[0]||[];for(let c=0;c<hdr.l
  return month+5;
 }
 function getRowVal(map,key,c){return num(map[key]?.[c])}
-async function parseExcel(file){const year=+$('upYear').value,month=+$('upMonth').value;const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});const a=sheetRows(wb,'Data Asset'),n=sheetRows(wb,'Neraca'),l=sheetRows(wb,'LM-LF');const am=rowMap(a),nm=rowMap(n),lm=rowMap(l);const nc=detectMonthColumn(n,month),ac=detectMonthColumn(a,month),lc=detectMonthColumn(l,month);const ng=k=>getRowVal(nm,k,nc),ag=k=>getRowVal(am,k,ac),lg=k=>getRowVal(lm,k,lc);
+async function parseExcel(file,monthOverride=null){const year=+$('upYear').value,month=monthOverride||+$('upMonth').value;const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});const a=sheetRows(wb,'Data Asset'),n=sheetRows(wb,'Neraca'),l=sheetRows(wb,'LM-LF');const am=rowMap(a),nm=rowMap(n),lm=rowMap(l);const nc=detectMonthColumn(n,month),ac=detectMonthColumn(a,month),lc=detectMonthColumn(l,month);const ng=k=>getRowVal(nm,k,nc),ag=k=>getRowVal(am,k,ac),lg=k=>getRowVal(lm,k,lc);
  const penerimaan=ng('penerimaan'),terima=ng('terima unit lain'),tt=ng('penjualan tt'),tm=ng('penjualan tm'),tr=ng('penjualan tr'),kirim=ng('kirim unit lain'),sendiri=ng('pemakaian sendiri'),eminTT=ng('e-min tt'),eminTM=ng('e-min tm'),eminTR=ng('e-min tr'),p2tl=ng('p2tl'); if(!penerimaan)throw Error(`Penerimaan ${MONTHS[month-1]} tidak ditemukan di sheet Neraca`);
  const masuk=penerimaan+terima,loss=masuk-tt-tm-tr-kirim-sendiri+eminTT+eminTM+eminTR,dist=loss/masuk*100;
  // Formula Jogja PLN — diadaptasi menjadi per bulan dari model ULP Sungai Penuh.
@@ -165,59 +165,65 @@ async function parseExcel(file){const year=+$('upYear').value,month=+$('upMonth'
 };
 }
 function renderPreview(d){previewData=d;$('prevPeriod').textContent=`${MONTHS[d.bulan-1]} ${d.tahun}`;$('pDist').textContent=pc(d.susut_distribusi);$('pDistKwh').textContent=fmt(d.susut_distribusi_kwh)+' kWh';$('pTech').textContent=pc(d.susut_teknis);$('pTechKwh').textContent=fmt(d.susut_teknis_kwh)+' kWh';$('pNon').textContent=pc(d.susut_nonteknis);$('pNon').className='val '+(d.susut_nonteknis<=0?'good':'');$('pJtm').textContent=pc(d.jtm_persen);$('pGardu').textContent=pc(d.gardu_persen);$('pJtr').textContent=pc(d.jtr_persen);$('pSr').textContent=pc(d.sr_persen);$('preview').classList.add('show');$('saveStatus').textContent='Belum disimpan.';$('preview').scrollIntoView({behavior:'smooth'})}
-$('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{$('fname').textContent=f.name+' — memproses…';renderPreview(await parseExcel(f));$('fname').textContent=f.name+' — berhasil dibaca'}catch(err){$('fname').textContent='Gagal: '+err.message;alert(err.message)}};
-['dragenter','dragover'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').classList.add('drag')}));$('drop').ondragleave=()=> $('drop').classList.remove('drag');$('drop').ondrop=async e=>{e.preventDefault();$('drop').classList.remove('drag');const f=e.dataTransfer.files[0];if(!f)return;try{$('fname').textContent=f.name+' — memproses…';renderPreview(await parseExcel(f));$('fname').textContent=f.name+' — berhasil dibaca'}catch(err){alert(err.message)}};
+$('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;currentExcelFile=f;try{$('fname').textContent=f.name+' — memproses…';renderPreview(await parseExcel(f));$('fname').textContent=f.name+' — berhasil dibaca'}catch(err){$('fname').textContent='Gagal: '+err.message;alert(err.message)}};
+['dragenter','dragover'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').classList.add('drag')}));$('drop').ondragleave=()=> $('drop').classList.remove('drag');$('drop').ondrop=async e=>{e.preventDefault();$('drop').classList.remove('drag');const f=e.dataTransfer.files[0];if(!f)return;currentExcelFile=f;try{$('fname').textContent=f.name+' — memproses…';renderPreview(await parseExcel(f));$('fname').textContent=f.name+' — berhasil dibaca'}catch(err){alert(err.message)}};
 async function saveData(){
- if(!previewData)return;
- const d={...previewData};
-
- const detail={
-  tahun:d.tahun, bulan:d.bulan,
-  susut_distribusi:d.susut_distribusi,
-  susut_teknis:d.susut_teknis,
-  susut_nonteknis:d.susut_nonteknis,
-  jtm_persen:d.jtm_persen, jtm_kwh:d.jtm_kwh,
-  gardu_persen:d.gardu_persen, gardu_kwh:d.gardu_kwh,
-  jtr_persen:d.jtr_persen, jtr_kwh:d.jtr_kwh,
-  sr_persen:d.sr_persen, sr_kwh:d.sr_kwh,
-  p2tl_kwh:d.p2tl_kwh,
-  kontribusi_p2tl:d.p2tl_poin
- };
-
- const bulanan={
-  tahun:d.tahun, bulan:d.bulan,
-  penerimaan:d.penerimaan,
-  jual_tt:d.jual_tt,
-  jual_tm:d.jual_tm,
-  jual_tr:d.jual_tr,
-  terima_unit_lain:d.terima_unit_lain,
-  kirim_unit_lain:d.kirim_unit_lain,
-  pemakaian_sendiri:d.pemakaian_sendiri,
-  emin_tm:d.emin_tm,
-  emin_tr:d.emin_tr
- };
-
+ if(!previewData||!currentExcelFile)return;
  $('saveBtn').disabled=true;
- $('saveStatus').textContent='Menyimpan…';
-
+ $('saveStatus').textContent='Menghitung ulang Januari–Desember…';
  try{
-  const {error:e1}=await sb.from('susut_detail').upsert(detail,{onConflict:'tahun,bulan'});
-  if(e1)throw e1;
+  const calculated=[];
+  for(let month=1;month<=12;month++){
+   try{ calculated.push(await parseExcel(currentExcelFile,month)); }
+   catch(err){
+    // Bulan yang belum memiliki Penerimaan dianggap belum tersedia, bukan error.
+    if(!String(err?.message||err).includes('Penerimaan')) throw err;
+   }
+  }
+  if(!calculated.length)throw Error('Tidak ada bulan dengan data Penerimaan yang dapat dihitung.');
 
+  const details=calculated.map(d=>({
+   tahun:d.tahun, bulan:d.bulan,
+   susut_distribusi:d.susut_distribusi,
+   susut_teknis:d.susut_teknis,
+   susut_nonteknis:d.susut_nonteknis,
+   jtm_persen:d.jtm_persen, jtm_kwh:d.jtm_kwh,
+   gardu_persen:d.gardu_persen, gardu_kwh:d.gardu_kwh,
+   jtr_persen:d.jtr_persen, jtr_kwh:d.jtr_kwh,
+   sr_persen:d.sr_persen, sr_kwh:d.sr_kwh,
+   p2tl_kwh:d.p2tl_kwh,
+   kontribusi_p2tl:d.p2tl_poin
+  }));
+  const bulanan=calculated.map(d=>({
+   tahun:d.tahun, bulan:d.bulan,
+   penerimaan:d.penerimaan,
+   jual_tt:d.jual_tt,
+   jual_tm:d.jual_tm,
+   jual_tr:d.jual_tr,
+   terima_unit_lain:d.terima_unit_lain,
+   kirim_unit_lain:d.kirim_unit_lain,
+   pemakaian_sendiri:d.pemakaian_sendiri,
+   emin_tm:d.emin_tm,
+   emin_tr:d.emin_tr
+  }));
+
+  const {error:e1}=await sb.from('susut_detail').upsert(details,{onConflict:'tahun,bulan'});
+  if(e1)throw e1;
   const {error:e2}=await sb.from('susut_bulanan').upsert(bulanan,{onConflict:'tahun,bulan'});
   if(e2)throw e2;
 
-  $('saveStatus').textContent=`Tersimpan: ${MONTHS[d.bulan-1]} ${d.tahun} — Detail & Susut Bulanan ter-update`;
+  calculated.forEach(d=>localStorage.setItem(`susut_${d.tahun}_${d.bulan}`,JSON.stringify(details.find(x=>x.tahun===d.tahun&&x.bulan===d.bulan))));
+  const names=calculated.map(d=>MONTHS[d.bulan-1]).join(', ');
+  $('saveStatus').textContent=`Formula Jogja ter-update: ${names} ${calculated[0].tahun}`;
   await loadData();
-  renderSingle(d.tahun,d.bulan);
+  const selected=+$('upMonth').value;
+  const shown=calculated.find(d=>d.bulan===selected)||calculated[calculated.length-1];
+  $('monYear').value=shown.tahun;$('monMonth').value=shown.bulan;renderSingle(shown.tahun,shown.bulan);
  }catch(err){
   console.error(err);
-  localStorage.setItem(`susut_${d.tahun}_${d.bulan}`,JSON.stringify(detail));
   $('saveStatus').textContent='Gagal menyimpan ke Supabase.';
-  alert('Gagal menyimpan data Susut: '+(err?.message||err));
- }finally{
-  $('saveBtn').disabled=false;
- }
+  alert('Gagal menghitung/menyimpan Susut: '+(err?.message||err));
+ }finally{$('saveBtn').disabled=false;}
 }
 $('saveBtn').onclick=saveData;
 async function loadData(){let rows=[];try{const {data,error}=await sb.from('susut_detail').select('*').order('tahun').order('bulan');if(!error&&data)rows=data}catch(e){};for(let y=2026;y<=2030;y++)for(let m=1;m<=12;m++){const x=localStorage.getItem(`susut_${y}_${m}`);if(x&&!rows.some(r=>+r.tahun===y&&+r.bulan===m))rows.push(JSON.parse(x))}cache=rows;return rows}

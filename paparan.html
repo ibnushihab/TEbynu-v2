@@ -39,12 +39,13 @@ async function load(){
   if(!window.Chart) throw new Error('Library grafik gagal dimuat. Refresh halaman.');
   if(!db) db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
   const y=+year.value;
-  const [h,t,l,su,tr]=await Promise.all([
+  const [h,t,l,su,tr,sd]=await Promise.all([
    db.from('p2tl_harian').select('*').gte('tanggal',`${y}-01-01`).lte('tanggal',`${y}-12-31`).order('tanggal'),
    db.from('target_tahunan').select('*').eq('tahun',y).limit(1),
    db.from('lbkb_bulanan').select('*').eq('tahun',y).order('bulan'),
    db.from('susut_bulanan').select('*').eq('tahun',y).order('bulan'),
-   db.from('target_susut').select('*').eq('tahun',y).order('bulan')
+   db.from('target_susut').select('*').eq('tahun',y).order('bulan'),
+    db.from('susut_detail').select('*').eq('tahun',y).order('bulan')
   ]);
   const failed=[h,t,l,su,tr].find(x=>x?.error); if(failed) throw failed.error;
   DATA={harian:h.data||[],target:t.data?.[0]||{},lbkb:l.data||[],susut:su.data||[],_targetSusut:tr.data||[]};
@@ -78,10 +79,16 @@ async function render(){
  slide('P2TL',`Kinerja s.d. ${MONTHS[m-1]} ${y}`,kpi('Target s.d.',fmt(pTar)+' kWh')+kpi('Realisasi s.d.',fmt(pY)+' kWh')+kpi('Capaian',pct(pCap),'',perfClass(pCap))+kpi('Gap',fmt(pY-pTar)+' kWh','',perfClass(pCap)),'p2tlChart','p2tl','<div class="legend"><span><i class="dot real"></i>Realisasi</span><span><i class="dot target"></i>Target</span></div>')+
  slide('Harmet / Ganti kWh Meter',`Kinerja s.d. ${MONTHS[m-1]} ${y}`,kpi('Target s.d.',fmt(mTar)+' pelanggan')+kpi('Realisasi s.d.',fmt(mY)+' pelanggan')+kpi('Capaian',pct(mCap),'',perfClass(mCap))+kpi('Gap',fmt(mY-mTar)+' pelanggan','',perfClass(mCap)),'meterChart','meter','<div class="legend"><span><i class="dot real"></i>Realisasi</span><span><i class="dot target"></i>Target</span></div>')+
  slide('LBKB',`Kinerja ${MONTHS[m-1]} ${y}`,kpi('Target bulan ini',fmt(lb.target))+kpi('Realisasi bulan ini',fmt(lb.realisasi))+kpi('Capaian',pct(lbCap),'',perfClass(lbCap))+kpi('Realisasi s.d.',fmt(lbY.r),'',perfClass(lbCap)),'lbkbChart','lbkb','<div class="legend"><span><i class="dot real"></i>Realisasi</span><span><i class="dot target"></i>Target</span></div>')+
- slide('Susut Distribusi',lastSusut?`Data aktual terakhir: ${MONTHS[lastSusut-1]} ${y} · Paparan ${MONTHS[m-1]} ${y}`:`Belum ada data Susut sampai ${MONTHS[m-1]} ${y}`,kpi('Susut Kumulatif',pct(susCum),'',susCls)+kpi('Target Kumulatif',pct(susTarget))+kpi('Gap',susGap==null?'–':(susGap>0?'+':'')+pct(susGap),'',susCls)+kpi('Aktual Terakhir',lastSusut?MONTHS[lastSusut-1]:'–'),'susutChart','susut','<div class="legend"><span><i class="dot real"></i>Realisasi Bulanan</span><span><i class="dot prog"></i>Proyeksi Pencapaian Target</span></div>');
+ slide('Susut Distribusi',lastSusut?`Data aktual terakhir: ${MONTHS[lastSusut-1]} ${y} · Paparan ${MONTHS[m-1]} ${y}`:`Belum ada data Susut sampai ${MONTHS[m-1]} ${y}`,kpi('Susut Kumulatif',pct(susCum),'',susCls)+kpi('Target Kumulatif',pct(susTarget))+kpi('Gap',susGap==null?'–':(susGap>0?'+':'')+pct(susGap),'',susCls)+kpi('Aktual Terakhir',lastSusut?MONTHS[lastSusut-1]:'–'),'susutChart','susut','<div class="legend"><span><i class="dot real"></i>Realisasi Bulanan</span><span><i class="dot prog"></i>Proyeksi Pencapaian Target</span></div>')+
+  (()=>{const d=DATA.susutDetail.find(x=>+x.bulan===lastSusut)||{}, dist=d.susut_distribusi==null?null:+d.susut_distribusi, tech=d.susut_teknis==null?null:+d.susut_teknis, non=d.susut_nonteknis==null?null:+d.susut_nonteknis;
+    return slide('Susut Detail',lastSusut?`Breakdown Formula Jogja · ${MONTHS[lastSusut-1]} ${y}`:`Belum ada data Susut Detail sampai ${MONTHS[m-1]} ${y}`,
+      kpi('Susut Distribusi',pct(dist))+kpi('Susut Teknis',pct(tech))+kpi('Susut Nonteknis',pct(non))+kpi('Periode Aktual',lastSusut?MONTHS[lastSusut-1]:'–'),
+      'susutDetailChart','susut-detail',
+      '<div class="legend"><span><i class="dot real"></i>JTM</span><span><i class="dot target"></i>Gardu / Trafo</span><span><i class="dot prog"></i>JTR</span><span><i class="dot" style="background:#0b2942"></i>SR</span></div>');
+  })();
  restoreNotes(); await drawCharts(m,mo,pt,mt,lastSusut,susActual,susProg);
 }
-const valueLabelPlugin={id:'valueLabels',afterDatasetsDraw(chart,args,pluginOptions){const {ctx}=chart;ctx.save();chart.data.datasets.forEach((ds,di)=>{const meta=chart.getDatasetMeta(di);if(meta.hidden)return;meta.data.forEach((el,i)=>{const raw=ds.data[i];if(raw==null||raw===''||!Number.isFinite(Number(raw)))return;const v=Number(raw);const isPct=chart.canvas.id==='susutChart';const label=isPct?v.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+'%':Math.round(v).toLocaleString('id-ID');const isLine=ds.type==='line'||chart.config.type==='line';ctx.font='800 10px Inter, system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillStyle=ds.borderColor||'#172033';let x=el.x,y=el.y-(isLine?8:5);if(y<16){y=el.y+16;ctx.textBaseline='top'}ctx.fillText(label,x,y);});});ctx.restore();}};
+const valueLabelPlugin={id:'valueLabels',afterDatasetsDraw(chart,args,pluginOptions){const {ctx}=chart;ctx.save();chart.data.datasets.forEach((ds,di)=>{const meta=chart.getDatasetMeta(di);if(meta.hidden)return;meta.data.forEach((el,i)=>{const raw=ds.data[i];if(raw==null||raw===''||!Number.isFinite(Number(raw)))return;const v=Number(raw);const isPct=chart.canvas.id==='susutChart'||chart.canvas.id==='susutDetailChart';const label=isPct?v.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+'%':Math.round(v).toLocaleString('id-ID');const isLine=ds.type==='line'||chart.config.type==='line';ctx.font='800 10px Inter, system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillStyle=ds.borderColor||'#172033';let x=el.x,y=el.y-(isLine?8:5);if(y<16){y=el.y+16;ctx.textBaseline='top'}ctx.fillText(label,x,y);});});ctx.restore();}};
 Chart.register(valueLabelPlugin);
 function chart(id,type,data,opts={}){const c=new Chart(document.getElementById(id),{type,data,options:{responsive:true,maintainAspectRatio:false,animation:false,layout:{padding:{top:22,left:6,right:6}},plugins:{legend:{display:false},tooltip:{backgroundColor:'#102a43',padding:10,cornerRadius:10}},scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#738391',font:{size:10,weight:700}}},y:{grid:{color:'#edf1f3'},border:{display:false},ticks:{color:'#8b99a5',font:{size:9}}}},...opts}});charts.push(c);return c}
 async function drawCharts(m,mo,pt,mt,lastSusut,susActual,susProg){
@@ -91,6 +98,13 @@ async function drawCharts(m,mo,pt,mt,lastSusut,susActual,susProg){
  const lb=Array.from({length:m},(_,i)=>DATA.lbkb.find(x=>+x.bulan===i+1)||{});chart('lbkbChart','bar',{labels,datasets:[{label:'Realisasi',data:lb.map(x=>x.realisasi==null?null:+x.realisasi),backgroundColor:realColor,borderRadius:9},{type:'line',label:'Target',data:lb.map(x=>x.target==null?null:+x.target),borderColor:targetColor,borderDash:[7,6],borderWidth:2,pointRadius:0}]});
  const susutLabels=short.slice(0,12);
  chart('susutChart','line',{labels:susutLabels,datasets:[{label:'Realisasi Bulanan',data:susActual,borderColor:realColor,backgroundColor:realColor,borderWidth:3,pointRadius:3,tension:.28,spanGaps:false},{label:'Proyeksi Pencapaian Target',data:susProg,borderColor:'#8b9aab',borderDash:[6,5],borderWidth:2,pointRadius:2,tension:.28,spanGaps:false}]});
+  const sd=DATA.susutDetail.find(x=>+x.bulan===lastSusut)||{};
+  chart('susutDetailChart','bar',{labels:['JTM','Gardu / Trafo','JTR','SR'],datasets:[{label:'Susut Teknis',data:[
+    sd.jtm_persen==null?null:+sd.jtm_persen,
+    sd.gardu_persen==null?null:+sd.gardu_persen,
+    sd.jtr_persen==null?null:+sd.jtr_persen,
+    sd.sr_persen==null?null:+sd.sr_persen
+  ],backgroundColor:['#16a6b6','#f59e0b','#8b9aab','#0b2942'],borderRadius:9}]});
 }
 function saveNotes(){document.querySelectorAll('.editable').forEach(e=>localStorage.setItem(`paparan:${year.value}:${month.value}:${e.dataset.note}`,e.innerHTML))}function restoreNotes(){document.querySelectorAll('.editable').forEach(e=>{e.innerHTML=localStorage.getItem(`paparan:${year.value}:${month.value}:${e.dataset.note}`)||'';e.addEventListener('input',saveNotes)})}
 function present(){document.documentElement.requestFullscreen?.()}

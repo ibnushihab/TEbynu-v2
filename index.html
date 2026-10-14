@@ -2283,9 +2283,11 @@ function renderOverviewSusut(namaBulan, perBulan, susutKumulatif, targetKumulati
   const statusEl=document.getElementById('susutStatusTarget'), selisihEl=document.getElementById('susutSelisihTarget'), ketTargetEl=document.getElementById('susutKeteranganTarget');
   if (target != null && realisasi != null) {
     const gap=realisasi-target, tercapai=realisasi<=target;
+    // Khusus Susut: semakin kecil realisasi semakin baik. Target/realisasi membuat capaian >=100% saat target tercapai.
+    const capaian=realisasi>0?(target/realisasi*100):null;
     statusEl.textContent=tercapai?'Tercapai':'Belum Tercapai'; statusEl.className='status '+(tercapai?'susut-status-ok':'susut-status-bad');
-    selisihEl.textContent=(gap>0?'+':'')+gap.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+' poin'; selisihEl.className=tercapai?'susut-status-ok':'susut-status-bad';
-    ketTargetEl.textContent=tercapai?'Di bawah / sama dengan target':'Di atas target'; ketTargetEl.className='status '+(tercapai?'susut-status-ok':'susut-status-bad');
+    selisihEl.innerHTML=(capaian==null?'–':capaian.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+'%')+`<div style="font-size:12px;font-weight:700;margin-top:6px">${gap>0?'+':''}${gap.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})} poin</div>`; selisihEl.className=tercapai?'susut-status-ok':'susut-status-bad';
+    ketTargetEl.textContent=tercapai?'Capaian target · tercapai':'Capaian target · belum tercapai'; ketTargetEl.className='status '+(tercapai?'susut-status-ok':'susut-status-bad');
   } else { statusEl.textContent='Target belum tersedia'; statusEl.className='status'; selisihEl.textContent='–'; ketTargetEl.textContent='–'; }
   const label=document.getElementById('susutPerubahanLabel'), el=document.getElementById('susutPerubahan'), ket=document.getElementById('susutKeteranganPerubahan'), prev=latest-1;
   if (prev>=0 && susutKumulatif[prev]!=null) {

@@ -28,7 +28,7 @@ nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-
 .prog-hero{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch}.prog-period{border:1px solid var(--line);border-radius:16px;padding:16px;background:#f8fbfd}.prog-period.proj{background:#eef8fb;border-color:#c7e7ec}.prog-period small{display:block;color:var(--muted);font-weight:800}.prog-period b{display:block;font-size:22px;margin-top:4px}.prog-arrow{display:grid;place-items:center;font-size:24px;font-weight:950;color:var(--navy)}
 .prog-toolbar{display:grid;grid-template-columns:220px 1fr;gap:12px;margin-top:16px}.prog-note{padding:12px;border-radius:12px;background:#fff7df;color:#705000;font-size:12px}
 .prog-groups{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.prog-group{border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden}.prog-group summary{cursor:pointer;padding:14px 16px;font-weight:900;background:#f7fafc;list-style:none}.prog-group summary::-webkit-details-marker{display:none}.prog-group-body{padding:12px 14px}
-.adj-row{display:grid;grid-template-columns:minmax(190px,1.5fr) 105px minmax(180px,1fr) 105px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px dashed #e3ebf0}.adj-row:last-child{border-bottom:0}.adj-label{font-size:12px;font-weight:800}.adj-base,.adj-final{font-size:12px}.adj-base small,.adj-final small{display:block;color:var(--muted);font-size:9px}.adj-box{display:grid;grid-template-columns:32px 1fr 32px;gap:5px}.adj-box button{border:1px solid #cbd9e2;background:#f7fafc;border-radius:8px;font-weight:900;cursor:pointer}.adj-box input{min-width:0;width:100%;padding:8px;border:1px solid #cad8e2;border-radius:8px;text-align:right}.neraca-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.neraca-item{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fafcfd}.neraca-item label{display:block;font-size:11px;font-weight:900;margin-bottom:6px}.neraca-item .neraca-meta{font-size:9px;color:var(--muted);margin-bottom:6px}.neraca-item input{width:100%;padding:8px;border:1px solid #cad8e2;border-radius:8px;text-align:right}
+.adj-row{display:grid;grid-template-columns:minmax(190px,1.5fr) 105px minmax(180px,1fr) 105px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px dashed #e3ebf0}.adj-row:last-child{border-bottom:0}.adj-label{font-size:12px;font-weight:800}.adj-base,.adj-final{font-size:12px}.adj-base small,.adj-final small{display:block;color:var(--muted);font-size:9px}.adj-box{display:grid;grid-template-columns:32px 1fr 32px;gap:5px}.adj-box button{border:1px solid #cbd9e2;background:#f7fafc;border-radius:8px;font-weight:900;cursor:pointer}.adj-box input{min-width:0;width:100%;padding:8px;border:1px solid #cad8e2;border-radius:8px;text-align:right}.adj-row.auto-parent{background:#f3f8fb;border-radius:10px;padding-left:8px;padding-right:8px}.adj-row.auto-parent .adj-label{color:var(--navy)}.auto-sum{font-size:10px;font-weight:950;color:#006d80;background:#e8f5f7;border:1px solid #c7e7ec;border-radius:999px;padding:7px 10px;text-align:center;white-space:nowrap}.neraca-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.neraca-item{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fafcfd}.neraca-item label{display:block;font-size:11px;font-weight:900;margin-bottom:6px}.neraca-item .neraca-meta{font-size:9px;color:var(--muted);margin-bottom:6px}.neraca-item input{width:100%;padding:8px;border:1px solid #cad8e2;border-radius:8px;text-align:right}
 .prog-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px}.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.result-card{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}.result-card small{display:block;color:var(--muted);font-weight:800}.result-card b{display:block;font-size:25px;margin-top:5px}.result-card .delta{font-size:11px;font-weight:900;margin-top:5px}.result-components{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
 @media(max-width:900px){.prog-groups,.neraca-grid,.result-grid,.result-components{grid-template-columns:1fr}.prog-hero{grid-template-columns:1fr}.prog-arrow{transform:rotate(90deg)}.prog-toolbar{grid-template-columns:1fr}.adj-row{grid-template-columns:1fr 90px 1fr}.adj-label{grid-column:1/-1}}
 
@@ -110,11 +110,23 @@ function snapshotCell(v){
  if(typeof v==='number'||typeof v==='boolean')return v;
  return String(v).trim();
 }
-function snapshotSheet(rows,month){
+function snapshotSheet(rows,month,includeMeta=false){
  const c=detectMonthColumn(rows,month);
  return rows
   .filter(r=>r[0]!=null&&String(r[0]).trim()!=='')
-  .map(r=>({label:String(r[0]).trim(),value:snapshotCell(r[c])}));
+  .map(r=>{
+   const item={label:String(r[0]).trim(),value:snapshotCell(r[c])};
+   // Khusus Data Asset, simpan metadata teknis dari kolom template agar
+   // REK TM/TR/SR serta INTI/BELITAN TRAFO bisa dihitung ulang otomatis.
+   if(includeMeta)item.meta={
+    c1:snapshotCell(r[1]), // resistansi jaringan / rugi besi trafo
+    c2:snapshotCell(r[2]), // rugi belitan trafo
+    c3:snapshotCell(r[3]), // rating kVA (bila tersedia)
+    c4:snapshotCell(r[4]),
+    unit:snapshotCell(r[5])
+   };
+   return item;
+  });
 }
 async function buildInputSnapshots(file,calculated){
  const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
@@ -122,7 +134,7 @@ async function buildInputSnapshots(file,calculated){
  return calculated.map(d=>({
   tahun:d.tahun,
   bulan:d.bulan,
-  data_asset:snapshotSheet(a,d.bulan),
+  data_asset:snapshotSheet(a,d.bulan,true),
   neraca:snapshotSheet(n,d.bulan),
   lm_lf:snapshotSheet(l,d.bulan),
   source_file:file.name,
@@ -380,21 +392,125 @@ function buildAutoNeraca(baseSnap,targetY,targetM,history){
 }
 function assetCategory(label){const k=normLabel(label);if(k.includes('trafo')||k.includes('kva')||k.includes('inti ')||k.includes('belitan'))return'TRAFO';if(k.includes('pelanggan'))return'PELANGGAN';if(k.includes('penyulang')||k.includes('jaringan tegangan menengah')||k.includes('jtm')||k==='rek tm'||k.includes('tegangan operasi tm'))return'JTM';if(k.includes('jurusan')||k.includes('jaringan tegangan rendah')||k.includes('jtr')||k==='rek tr')return'JTR';if(k.includes('sambungan rumah')||k==='rek sr'||k.includes(' sr'))return'SR';return'LAINNYA'}
 function isNumericSnap(x){return x&&x.value!==null&&x.value!==''&&Number.isFinite(Number(x.value))}
-function adjRow(x,kind,index){const base=Number(x.value)||0,step=Math.abs(base)<=2?.01:1;return `<div class="adj-row"><div class="adj-label">${escapeHTML(x.label)}</div><div class="adj-base"><small>Aktual</small><b>${fmt(base)}</b></div><div class="adj-box"><button type="button" onclick="bumpAdj('${kind}',${index},-${step})">−</button><input id="adj_${kind}_${index}" data-kind="${kind}" data-index="${index}" type="number" step="${step}" value="0" oninput="refreshAdjFinal('${kind}',${index})"><button type="button" onclick="bumpAdj('${kind}',${index},${step})">+</button></div><div class="adj-final"><small>H+1</small><b id="final_${kind}_${index}">${fmt(base)}</b></div></div>`}
+
+// ===== DATA ASSET: INDUK + PARAMETER TURUNAN OTOMATIS =====
+// Prinsip: pengguna mengubah DETAIL aset. Rekap/parameter turunan mengikuti otomatis.
+// Formula Jogja di Monitoring TIDAK diubah; bagian ini hanya menyiapkan input H+1 Prognosa.
+const AUTO_ASSET_PARENTS=new Set([
+ 'jaringan tegangan menengah [jtm]',
+ 'jumlah trafo',
+ 'jumlah kva',
+ 'jaringan tegangan rendah [jtr]',
+ 'sambungan rumah',
+ 'jumlah pelanggan',
+ 'rek tm','rek tr','rek sr','inti trafo','belitan trafo'
+]);
+function isAutoAssetParent(label){return AUTO_ASSET_PARENTS.has(normLabel(label))}
+function isTrafoDetailLabel(label){return /^\s*\d+(?:[.,]\d+)?\s*kva\s*;/i.test(String(label||''))}
+function kvaFromTrafoLabel(label){const m=String(label||'').match(/(\d+(?:[.,]\d+)?)\s*kva/i);return m?Number(m[1].replace(',','.'))||0:0}
+function isJtmChildLabel(label){return /^(xlpe|cu\s|a3c\s|mvtic\s)/i.test(String(label||''))}
+function isJtrChildLabel(label){return /^(nfa2x-t|bc\s)/i.test(String(label||''))}
+function isSrChildLabel(label){return /^(nfa2x\s+2x|bc\s+2x)/i.test(String(label||''))}
+function assetMetaNum(x,key){const v=x?.meta?.[key];return v==null||v===''?0:num(v)}
+function assetUnit(x){return normLabel(x?.meta?.unit||'')}
+function assetIndex(arr,label){const k=normLabel(label);return (arr||[]).findIndex(x=>normLabel(x?.label)===k)}
+function assetBetween(arr,startLabel,endLabel){
+ const a=assetIndex(arr,startLabel),b=assetIndex(arr,endLabel);
+ if(a<0||b<0||b<=a)return[];
+ return arr.slice(a+1,b);
+}
+function sumChildren(items,pred){return (items||[]).reduce((z,x)=>z+(isNumericSnap(x)&&pred(x)?Number(x.value)||0:0),0)}
+function hasMetaResistance(x){return assetMetaNum(x,'c1')>0}
+function isKmChild(x,fallbackPred){return isNumericSnap(x)&&((assetUnit(x)==='kms'&&hasMetaResistance(x))||fallbackPred(x.label))}
+function weightedResistance(items,total,fallback){
+ if(!(total>0))return fallback;
+ let numerator=0,used=0;
+ for(const x of items||[]){
+  if(!isNumericSnap(x))continue;
+  const r=assetMetaNum(x,'c1');
+  if(!(r>0))continue;
+  numerator+=(Number(x.value)||0)*r;used++;
+ }
+ return used&&numerator>0?numerator/total:fallback;
+}
+function weightedTrafoLoss(items,total,metaKey,fallback){
+ if(!(total>0))return fallback;
+ let numerator=0,used=0;
+ for(const x of items||[]){
+  if(!isNumericSnap(x)||!isTrafoDetailLabel(x.label))continue;
+  const w=assetMetaNum(x,metaKey);
+  if(!(w>0))continue;
+  numerator+=(Number(x.value)||0)*w;used++;
+ }
+ // Template menyimpan rugi per unit dalam Watt; parameter induk dipakai dalam kW/trafo.
+ return used&&numerator>0?numerator/total/1000:fallback;
+}
+function autoAssetBadge(label){
+ const k=normLabel(label);
+ if(k==='jumlah kva')return'AUTO Σ UNIT × kVA';
+ if(k==='jumlah pelanggan')return'AUTO TR + TM + TT';
+ if(['rek tm','rek tr','rek sr'].includes(k))return'AUTO REK TERTIMBANG';
+ if(['inti trafo','belitan trafo'].includes(k))return'AUTO RATA² TERTIMBANG';
+ return'AUTO Σ DETAIL';
+}
+function syncAssetParents(asset){
+ const jtmItems=assetBetween(asset,'JARINGAN TEGANGAN MENENGAH [JTM]','TRAFO DISTRIBUSI');
+ const trafoItems=assetBetween(asset,'JUMLAH JURUSAN','JARINGAN TEGANGAN RENDAH [JTR]');
+ const jtrItems=assetBetween(asset,'JARINGAN TEGANGAN RENDAH [JTR]','SAMBUNGAN RUMAH');
+ const srItems=assetBetween(asset,'SAMBUNGAN RUMAH','JUMLAH PELANGGAN');
+
+ const jtm=sumChildren(jtmItems,x=>isKmChild(x,isJtmChildLabel));
+ const trafo=sumChildren(trafoItems,x=>isTrafoDetailLabel(x.label));
+ const kva=(trafoItems||[]).reduce((z,x)=>{
+  if(!isNumericSnap(x)||!isTrafoDetailLabel(x.label))return z;
+  const rating=assetMetaNum(x,'c3')||kvaFromTrafoLabel(x.label);
+  return z+(Number(x.value)||0)*rating;
+ },0);
+ const jtr=sumChildren(jtrItems,x=>isKmChild(x,isJtrChildLabel));
+ const sr=sumChildren(srItems,x=>isKmChild(x,isSrChildLabel));
+ const plg=(asset||[]).reduce((z,x)=>z+(isNumericSnap(x)&&['pelanggan tr','pelanggan tm','pelanggan tt'].includes(normLabel(x.label))?Number(x.value)||0:0),0);
+
+ setSnapNum(asset,'JARINGAN TEGANGAN MENENGAH [JTM]',jtm);
+ setSnapNum(asset,'JUMLAH TRAFO',trafo);
+ setSnapNum(asset,'JUMLAH kVA',kva);
+ setSnapNum(asset,'JARINGAN TEGANGAN RENDAH [JTR]',jtr);
+ setSnapNum(asset,'SAMBUNGAN RUMAH',sr);
+ setSnapNum(asset,'JUMLAH PELANGGAN',plg);
+
+ // Parameter turunan dihitung dari komposisi detail H+1.
+ setSnapNum(asset,'REK TM',weightedResistance(jtmItems,jtm,snapNum(asset,'REK TM')));
+ setSnapNum(asset,'REK TR',weightedResistance(jtrItems,jtr,snapNum(asset,'REK TR')));
+ setSnapNum(asset,'REK SR',weightedResistance(srItems,sr,snapNum(asset,'REK SR')));
+ setSnapNum(asset,'INTI TRAFO',weightedTrafoLoss(trafoItems,trafo,'c1',snapNum(asset,'INTI TRAFO')));
+ setSnapNum(asset,'BELITAN TRAFO',weightedTrafoLoss(trafoItems,trafo,'c2',snapNum(asset,'BELITAN TRAFO')));
+ return asset;
+}
+function adjRow(x,kind,index){
+ const base=Number(x.value)||0;
+ if(kind==='asset'&&isAutoAssetParent(x.label))return `<div class="adj-row auto-parent"><div class="adj-label">${escapeHTML(x.label)}</div><div class="adj-base"><small>Aktual</small><b>${fmt(base)}</b></div><div class="auto-sum">${autoAssetBadge(x.label)}</div><div class="adj-final"><small>H+1</small><b id="final_${kind}_${index}">${fmt(base)}</b></div></div>`;
+ const step=Math.abs(base)<=2?.01:1;return `<div class="adj-row"><div class="adj-label">${escapeHTML(x.label)}</div><div class="adj-base"><small>Aktual</small><b>${fmt(base)}</b></div><div class="adj-box"><button type="button" onclick="bumpAdj('${kind}',${index},-${step})">−</button><input id="adj_${kind}_${index}" data-kind="${kind}" data-index="${index}" type="number" step="${step}" value="0" oninput="refreshAdjFinal('${kind}',${index})"><button type="button" onclick="bumpAdj('${kind}',${index},${step})">+</button></div><div class="adj-final"><small>H+1</small><b id="final_${kind}_${index}">${fmt(base)}</b></div></div>`}
 function groupHTML(title,items,kind,open=false){return `<details class="prog-group" ${open?'open':''}><summary>${title} <span class="status">(${items.length} parameter)</span></summary><div class="prog-group-body">${items.length?items.map(({x,i})=>adjRow(x,kind,i)).join(''):'<div class="desc">Tidak ada parameter numerik pada kelompok ini.</div>'}</div></details>`}
 function bumpAdj(kind,index,delta){const el=$(`adj_${kind}_${index}`);if(!el)return;el.value=(Number(el.value)||0)+delta;refreshAdjFinal(kind,index)}
-function refreshAdjFinal(kind,index){const src=kind==='asset'?progState?.baseAsset:progState?.baseLm;if(!src||!src[index])return;const base=Number(src[index].value)||0,delta=Number($(`adj_${kind}_${index}`)?.value)||0;const out=$(`final_${kind}_${index}`);if(out)out.textContent=fmt(base+delta)}
-function getAdjusted(base,kind){const a=deepCopy(base||[]);a.forEach((x,i)=>{if(!isNumericSnap(x))return;const d=Number($(`adj_${kind}_${i}`)?.value)||0;x.value=(Number(x.value)||0)+d});return a}
+function refreshAdjFinal(kind,index){const src=kind==='asset'?progState?.baseAsset:progState?.baseLm;if(!src||!src[index])return;const base=Number(src[index].value)||0,delta=Number($(`adj_${kind}_${index}`)?.value)||0;const out=$(`final_${kind}_${index}`);if(out)out.textContent=fmt(base+delta);if(kind==='asset')refreshAssetAutoParents()}
+function getAdjusted(base,kind){const a=deepCopy(base||[]);a.forEach((x,i)=>{if(!isNumericSnap(x))return;if(kind==='asset'&&isAutoAssetParent(x.label))return;const d=Number($(`adj_${kind}_${i}`)?.value)||0;x.value=(Number(x.value)||0)+d});return a}
 function findCustomerLabel(arr,type){const A=Array.isArray(arr)?arr:[];const words=type==='tr'?['pelanggan tr','jumlah pelanggan tr']:type==='tm'?['pelanggan tm','jumlah pelanggan tm']:['jumlah pelanggan','total pelanggan'];for(const w of words){const x=A.find(z=>normLabel(z.label)===w||normLabel(z.label).includes(w));if(x)return x.label}return null}
-function syncCustomerTotal(asset){
- const trLab=findCustomerLabel(asset,'tr'),tmLab=findCustomerLabel(asset,'tm'),totLab=findCustomerLabel(asset,'total');
- if(trLab&&tmLab&&totLab&&normLabel(totLab)!==normLabel(trLab)&&normLabel(totLab)!==normLabel(tmLab))setSnapNum(asset,totLab,snapNum(asset,trLab)+snapNum(asset,tmLab));
+function scaleSrChildrenWithCustomers(baseAsset,finalAsset){
+ const trLab=findCustomerLabel(baseAsset,'tr');if(!trLab)return;
+ const bplg=snapNum(baseAsset,trLab),fplg=snapNum(finalAsset,trLab);if(!(bplg>0)||fplg===bplg)return;
+ const ratio=fplg/bplg;
+ (baseAsset||[]).forEach((x,i)=>{if(!isNumericSnap(x)||!isSrChildLabel(x.label))return;const manual=Number($(`adj_asset_${i}`)?.value)||0;if(finalAsset[i])finalAsset[i].value=(Number(x.value)||0)*ratio+manual});
 }
-function scaleSrWithCustomers(baseAsset,finalAsset){
- const trLab=findCustomerLabel(baseAsset,'tr'),srLab=(baseAsset||[]).find(x=>normLabel(x.label).includes('sambungan rumah'))?.label;
- if(!trLab||!srLab)return;
- const bplg=snapNum(baseAsset,trLab),fplg=snapNum(finalAsset,trLab),bsr=snapNum(baseAsset,srLab);
- if(bplg>0&&fplg!==bplg)setSnapNum(finalAsset,srLab,bsr*(fplg/bplg));
+function buildAdjustedAsset(){
+ const asset=getAdjusted(progState?.baseAsset||[],'asset');
+ scaleSrChildrenWithCustomers(progState?.baseAsset||[],asset);
+ return syncAssetParents(asset);
+}
+function refreshAssetAutoParents(){
+ if(!progState)return;
+ const asset=buildAdjustedAsset();
+ (progState.baseAsset||[]).forEach((x,i)=>{if(!isAutoAssetParent(x.label))return;const out=$(`final_asset_${i}`);if(out)out.textContent=fmt(Number(asset[i]?.value)||0)});
+ // Jika pelanggan TR mengubah panjang SR otomatis, tampilkan juga nilai H+1 detail SR yang ikut terskala.
+ (progState.baseAsset||[]).forEach((x,i)=>{if(!isSrChildLabel(x.label))return;const out=$(`final_asset_${i}`);if(out)out.textContent=fmt(Number(asset[i]?.value)||0)});
 }
 function historicalKwhPerCustDay(history,saleLabel,custType){const vals=[];for(const s of history){const cLab=findCustomerLabel(s.data_asset||[],custType);if(!cLab)continue;const c=snapNum(s.data_asset,cLab),e=snapNum(s.neraca,saleLabel);if(c>0&&e>0)vals.push(e/c/daysIn(s.tahun,s.bulan))}return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0}
 function applyCustomerImpact(neraca,baseAsset,finalAsset,history,targetY,targetM){
@@ -416,14 +532,17 @@ function initPrognosa(){
  progState={actual,baseSnap,target,history,baseAsset,baseLm,autoNeraca}; progResult=null;
  const cats={TRAFO:[],PELANGGAN:[],JTM:[],JTR:[],SR:[],LAINNYA:[]};baseAsset.forEach((x,i)=>{if(isNumericSnap(x))cats[assetCategory(x.label)].push({x,i})});
  const lmItems=baseLm.map((x,i)=>({x,i})).filter(z=>isNumericSnap(z.x));
- $('progControls').innerHTML=`<div class="card"><h3 style="margin-top:0">Penyesuaian Data Asset H+1</h3><p class="desc">Masukkan perubahan (+/−) dari posisi aktual. SR otomatis mengikuti rasio Sambungan Rumah : pelanggan TR jika baris pelanggan TR tersedia.</p><div class="prog-groups">${groupHTML('TRAFO',cats.TRAFO,'asset',true)}${groupHTML('PELANGGAN',cats.PELANGGAN,'asset',true)}${groupHTML('JTM',cats.JTM,'asset')}${groupHTML('JTR',cats.JTR,'asset')}${groupHTML('SR',cats.SR,'asset')}${groupHTML('PARAMETER LAIN',cats.LAINNYA,'asset')}</div></div><div class="card"><h3 style="margin-top:0">Penyesuaian LM-LF H+1</h3><p class="desc">Baseline diambil dari LM-LF bulan aktual terakhir.</p><div class="prog-groups">${groupHTML('LM-LF',lmItems,'lm',true)}</div></div>${renderNeracaControls(autoNeraca)}<div class="card"><div class="prog-actions"><button class="btn" id="calcProgBtn">Hitung Prognosa</button><button class="btn secondary" id="saveProgBtn" disabled>Simpan Prognosa</button><span id="progStatus" class="status">Belum dihitung.</span></div></div>`;
+ const metaReady=baseAsset.some(x=>x?.meta&&x.meta.c1!=null);
+ const metaNotice=metaReady?'':`<div class="notice warn"><b>Metadata teknis Data Asset belum tersimpan pada snapshot lama.</b> Upload ulang workbook aktual sekali lewat Update Susut agar REK TM/TR/SR serta INTI/BELITAN TRAFO bisa menghitung ulang otomatis dari detail aset.</div>`;
+ $('progControls').innerHTML=`<div class="card"><h3 style="margin-top:0">Penyesuaian Data Asset H+1</h3><p class="desc">Masukkan perubahan (+/−) hanya pada detail aset. Rekap JTM/JTR/SR, Jumlah Trafo, Jumlah kVA, Jumlah Pelanggan, REK TM/TR/SR, serta INTI/BELITAN TRAFO dihitung otomatis dari detail di bawahnya. Jumlah Jurusan tetap manual karena bukan SUM daftar trafo.</p>${metaNotice}<div class="prog-groups">${groupHTML('TRAFO',cats.TRAFO,'asset',true)}${groupHTML('PELANGGAN',cats.PELANGGAN,'asset',true)}${groupHTML('JTM',cats.JTM,'asset')}${groupHTML('JTR',cats.JTR,'asset')}${groupHTML('SR',cats.SR,'asset')}${groupHTML('PARAMETER LAIN',cats.LAINNYA,'asset')}</div></div><div class="card"><h3 style="margin-top:0">Penyesuaian LM-LF H+1</h3><p class="desc">Baseline diambil dari LM-LF bulan aktual terakhir.</p><div class="prog-groups">${groupHTML('LM-LF',lmItems,'lm',true)}</div></div>${renderNeracaControls(autoNeraca)}<div class="card"><div class="prog-actions"><button class="btn" id="calcProgBtn">Hitung Prognosa</button><button class="btn secondary" id="saveProgBtn" disabled>Simpan Prognosa</button><span id="progStatus" class="status">Belum dihitung.</span></div></div>`;
  $('calcProgBtn').onclick=calculatePrognosa;
  $('saveProgBtn').onclick=savePrognosa;
  $('progResult').innerHTML='';
+ refreshAssetAutoParents();
 }
 function calculatePrognosa(){
  if(!progState)return;
- const asset=getAdjusted(progState.baseAsset,'asset'); syncCustomerTotal(asset); scaleSrWithCustomers(progState.baseAsset,asset);
+ const asset=buildAdjustedAsset();
  const lm=getAdjusted(progState.baseLm,'lm');
  let ner=deepCopy(progState.autoNeraca); applyCustomerImpact(ner,progState.baseAsset,asset,progState.history,progState.target.tahun,progState.target.bulan); ner=getFinalNeraca(ner);
  const hasil=calculatePrognosaExact(progState.target.tahun,progState.target.bulan,asset,ner,lm);

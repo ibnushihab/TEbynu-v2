@@ -21,10 +21,21 @@ nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-
 
 .periodbar{display:grid;grid-template-columns:170px 280px 46px 280px 120px;gap:14px;align-items:end;margin-top:18px;justify-content:start}.periodbar .field{min-width:0;flex:none}.periodbar .field select{height:48px}.periodbar .vs{align-self:end;height:48px;display:grid;place-items:center;padding:0;font-size:16px}.vs{font-weight:950;color:var(--navy);padding:11px 2px;text-align:center}.dc-flow{min-height:390px;display:grid;grid-template-columns:1.05fr 1.05fr 1.35fr;gap:26px;align-items:center;position:relative;padding:18px 8px}.dc-col{display:flex;flex-direction:column;gap:12px;position:relative;z-index:2}.dc-node{border:1px solid #dfe7ed;border-radius:16px;background:#fff;padding:14px;box-shadow:0 5px 16px rgba(16,42,67,.06)}.dc-node.dist{background:#fff8e8;border-color:#f4d68a}.dc-node.tech{background:#f2f7ff;border-color:#cfe0f7}.dc-node.non{background:#effaf5;border-color:#cdebdc}.dc-node.jtm{background:#fff4f6;border-color:#f4d2da}.dc-node.gardu{background:#fff8ef;border-color:#f2d7b2}.dc-node.jtr{background:#f8f4ff;border-color:#dfd3f6}.dc-node.sr{background:#f1f8ff;border-color:#cfe3f5}.dc-title{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}.dc-vals{display:grid;grid-template-columns:1fr 1fr;gap:8px}.dc-v b{display:block;font-size:20px}.dc-v small{display:block;font-size:9px;color:var(--muted);margin-top:3px}.dc-delta{margin-top:7px;font-size:11px;font-weight:900}.dc-delta.down{color:var(--green)}.dc-delta.up{color:var(--red)}.dc-delta.flat{color:#8b9aab}.dc-comp-row{display:grid;grid-template-columns:58px 1fr 1fr 85px;gap:7px;align-items:center}.dc-comp-row .dc-title,.dc-comp-row .dc-delta{margin:0}.dc-comp-row .dc-v b{font-size:15px}.dc-kwh{font-size:9px;color:var(--muted);margin-top:3px}.asset-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}.asset-mini{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:10px}.asset-mini small{display:block;color:var(--muted);font-size:10px;font-weight:800}.asset-mini b{font-size:14px}.null{color:#9aa8b3!important}@media(max-width:800px){.periodbar{grid-template-columns:1fr}.vs{padding:0}.dc-flow{grid-template-columns:1fr}.asset-strip{grid-template-columns:1fr 1fr}}
 @media(max-width:800px){.kpis,.branch,.compareGrid{grid-template-columns:1fr}.branch:before,.branchCol:before{display:none}.components{grid-template-columns:1fr 1fr}.back{display:none}}
+
+/* ===== DATA ASSET + PROGNOSA ===== */
+.asset-card{margin-top:18px}.asset-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.asset-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}.asset-table{width:100%;border-collapse:collapse;min-width:720px;background:#fff}.asset-table th,.asset-table td{padding:10px 12px;border-bottom:1px solid #e8eef2;text-align:right;font-size:12px}.asset-table th{background:#f5f8fa;color:#526678;font-size:11px;position:sticky;top:0}.asset-table th:first-child,.asset-table td:first-child{text-align:left;font-weight:800}.asset-table tr:last-child td{border-bottom:0}.asset-delta.pos{color:var(--green);font-weight:900}.asset-delta.neg{color:var(--red);font-weight:900}.asset-delta.flat{color:var(--muted)}
+.prog-hero{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch}.prog-period{border:1px solid var(--line);border-radius:16px;padding:16px;background:#f8fbfd}.prog-period.proj{background:#eef8fb;border-color:#c7e7ec}.prog-period small{display:block;color:var(--muted);font-weight:800}.prog-period b{display:block;font-size:22px;margin-top:4px}.prog-arrow{display:grid;place-items:center;font-size:24px;font-weight:950;color:var(--navy)}
+.prog-toolbar{display:grid;grid-template-columns:220px 1fr;gap:12px;margin-top:16px}.prog-note{padding:12px;border-radius:12px;background:#fff7df;color:#705000;font-size:12px}
+.prog-groups{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.prog-group{border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden}.prog-group summary{cursor:pointer;padding:14px 16px;font-weight:900;background:#f7fafc;list-style:none}.prog-group summary::-webkit-details-marker{display:none}.prog-group-body{padding:12px 14px}
+.adj-row{display:grid;grid-template-columns:minmax(190px,1.5fr) 105px minmax(180px,1fr) 105px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px dashed #e3ebf0}.adj-row:last-child{border-bottom:0}.adj-label{font-size:12px;font-weight:800}.adj-base,.adj-final{font-size:12px}.adj-base small,.adj-final small{display:block;color:var(--muted);font-size:9px}.adj-box{display:grid;grid-template-columns:32px 1fr 32px;gap:5px}.adj-box button{border:1px solid #cbd9e2;background:#f7fafc;border-radius:8px;font-weight:900;cursor:pointer}.adj-box input{min-width:0;width:100%;padding:8px;border:1px solid #cad8e2;border-radius:8px;text-align:right}.neraca-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.neraca-item{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fafcfd}.neraca-item label{display:block;font-size:11px;font-weight:900;margin-bottom:6px}.neraca-item .neraca-meta{font-size:9px;color:var(--muted);margin-bottom:6px}.neraca-item input{width:100%;padding:8px;border:1px solid #cad8e2;border-radius:8px;text-align:right}
+.prog-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px}.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.result-card{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}.result-card small{display:block;color:var(--muted);font-weight:800}.result-card b{display:block;font-size:25px;margin-top:5px}.result-card .delta{font-size:11px;font-weight:900;margin-top:5px}.result-components{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+@media(max-width:900px){.prog-groups,.neraca-grid,.result-grid,.result-components{grid-template-columns:1fr}.prog-hero{grid-template-columns:1fr}.prog-arrow{transform:rotate(90deg)}.prog-toolbar{grid-template-columns:1fr}.adj-row{grid-template-columns:1fr 90px 1fr}.adj-label{grid-column:1/-1}}
+
 </style></head>
 <body>
 <div class="top"><div class="topin"><div class="brand">TE by Nu — Susut</div><div class="sub">Monitoring Susut Distribusi • Teknis • Nonteknis</div></div></div>
-<nav><div class="navin"><button class="navbtn active" data-panel="monitor">Monitoring Susut</button><button class="navbtn" data-panel="update">Update Susut</button><a class="back" href="index.html">← TE by Nu</a></div></nav>
+<nav><div class="navin"><button class="navbtn active" data-panel="monitor">Monitoring Susut</button><button class="navbtn" data-panel="update">Update Susut</button><button class="navbtn" data-panel="prognosa">Prognosa</button><a class="back" href="index.html">← TE by Nu</a></div></nav>
 <div class="wrap">
 <section id="monitor" class="panel active">
  <div class="card"><h2 class="title">Monitoring Susut</h2><p class="desc">Bandingkan kinerja Susut antar bulan, triwulan, atau semester.</p>
@@ -51,6 +62,20 @@ nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-
   </div>
  </div>
 </section>
+
+<section id="prognosa" class="panel">
+ <div class="card">
+  <h2 class="title">Prognosa Susut H+1</h2>
+  <p class="desc">Simulator terpisah dari data aktual. Baseline otomatis mengambil bulan aktual terakhir, lalu membentuk Data Asset, LM-LF, dan Neraca H+1.</p>
+  <div id="progHero" class="prog-hero" style="margin-top:16px"><div class="empty" style="grid-column:1/-1;padding:20px">Memuat baseline prognosa…</div></div>
+  <div class="prog-toolbar">
+   <div class="field"><label>Efektivitas pelanggan baru</label><input id="activeCustomerPct" type="number" min="0" max="100" step="5" value="50"><div class="desc">Persentase pelanggan baru yang diasumsikan aktif memakai energi pada bulan H+1.</div></div>
+   <div class="prog-note"><b>Metode Neraca:</b> histori maksimal 12 bulan dinormalisasi per hari. Jika ada bulan yang sama tahun lalu, bobotnya 50%, rata-rata 3 bulan terakhir 30%, dan rata-rata 12 bulan 20%. Jika tidak ada, 60% tiga bulan terakhir + 40% histori tersedia. Nilainya tetap bisa kamu koreksi manual sebelum dihitung.</div>
+  </div>
+ </div>
+ <div id="progControls"></div>
+ <div id="progResult"></div>
+</section>
 </div>
 <script>
 const SUPABASE_URL='https://xwjcpmxgsjjbrphbiipq.supabase.co';
@@ -58,7 +83,7 @@ const SUPABASE_KEY='sb_publishable_spj0cvuxeqTxqyk__WQFmw_MfPQw1aJ';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const MONTHS=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 const $=id=>document.getElementById(id); const fmt=n=>new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(Number(n)||0); const pc=n=>fmt(n)+'%';
-let previewData=null, cache=[], currentExcelFile=null;
+let previewData=null, cache=[], currentExcelFile=null, snapshots=[], progState=null, progResult=null;
 function fillSelects(){
  const years=[2026,2027,2028,2029,2030];
  $('upYear').innerHTML=years.map(y=>`<option ${y===2026?'selected':''}>${y}</option>`).join('');
@@ -71,6 +96,7 @@ document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>{
  b.classList.add('active');
  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
  $(b.dataset.panel).classList.add('active');
+ if(b.dataset.panel==='prognosa')initPrognosa();
 });
 function sheetRows(wb,name){const s=wb.Sheets[name];if(!s)throw Error(`Sheet "${name}" tidak ditemukan`);return XLSX.utils.sheet_to_json(s,{header:1,defval:null,raw:true})}
 function rowMap(rows){const m={};rows.forEach(r=>{if(r[0]!=null)m[String(r[0]).trim().toLowerCase()]=r});return m}
@@ -79,6 +105,30 @@ function detectMonthColumn(rows,month){const hdr=rows[0]||[];for(let c=0;c<hdr.l
  return month+5;
 }
 function getRowVal(map,key,c){return num(map[key]?.[c])}
+function snapshotCell(v){
+ if(v==null||v==='')return null;
+ if(typeof v==='number'||typeof v==='boolean')return v;
+ return String(v).trim();
+}
+function snapshotSheet(rows,month){
+ const c=detectMonthColumn(rows,month);
+ return rows
+  .filter(r=>r[0]!=null&&String(r[0]).trim()!=='')
+  .map(r=>({label:String(r[0]).trim(),value:snapshotCell(r[c])}));
+}
+async function buildInputSnapshots(file,calculated){
+ const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+ const a=sheetRows(wb,'Data Asset'),n=sheetRows(wb,'Neraca'),l=sheetRows(wb,'LM-LF');
+ return calculated.map(d=>({
+  tahun:d.tahun,
+  bulan:d.bulan,
+  data_asset:snapshotSheet(a,d.bulan),
+  neraca:snapshotSheet(n,d.bulan),
+  lm_lf:snapshotSheet(l,d.bulan),
+  source_file:file.name,
+  updated_at:new Date().toISOString()
+ }));
+}
 async function parseExcel(file,monthOverride=null){const year=+$('upYear').value,month=monthOverride||+$('upMonth').value;const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});const a=sheetRows(wb,'Data Asset'),n=sheetRows(wb,'Neraca'),l=sheetRows(wb,'LM-LF');const am=rowMap(a),nm=rowMap(n),lm=rowMap(l);const nc=detectMonthColumn(n,month),ac=detectMonthColumn(a,month),lc=detectMonthColumn(l,month);const ng=k=>getRowVal(nm,k,nc),ag=k=>getRowVal(am,k,ac),lg=k=>getRowVal(lm,k,lc);
  const penerimaan=ng('penerimaan'),terima=ng('terima unit lain'),tt=ng('penjualan tt'),tm=ng('penjualan tm'),tr=ng('penjualan tr'),kirim=ng('kirim unit lain'),sendiri=ng('pemakaian sendiri'),eminTT=ng('e-min tt'),eminTM=ng('e-min tm'),eminTR=ng('e-min tr'),p2tl=ng('p2tl'); if(!penerimaan)throw Error(`Penerimaan ${MONTHS[month-1]} tidak ditemukan di sheet Neraca`);
  const masuk=penerimaan+terima,loss=masuk-tt-tm-tr-kirim-sendiri+eminTT+eminTM+eminTR,dist=loss/masuk*100;
@@ -227,9 +277,22 @@ async function saveData(){
   const {error:e2}=await sb.from('susut_bulanan').upsert(bulanan,{onConflict:'tahun,bulan'});
   if(e2)throw e2;
 
+
+  // STEP 3 — simpan snapshot lengkap input aktual secara TERPISAH.
+  // Tidak mengubah rumus maupun data Monitoring Susut.
+  let snapshotWarning='';
+  try{
+   const snapshots=await buildInputSnapshots(currentExcelFile,calculated);
+   const {error:e3}=await sb.from('susut_input_snapshot').upsert(snapshots,{onConflict:'tahun,bulan'});
+   if(e3)throw e3;
+  }catch(snapshotErr){
+   console.error('Snapshot input gagal:',snapshotErr);
+   snapshotWarning=' • Snapshot input gagal disimpan';
+  }
+
   calculated.forEach(d=>localStorage.setItem(`susut_${d.tahun}_${d.bulan}`,JSON.stringify(details.find(x=>x.tahun===d.tahun&&x.bulan===d.bulan))));
   const names=calculated.map(d=>MONTHS[d.bulan-1]).join(', ');
-  $('saveStatus').textContent=`Formula Jogja ter-update: ${names} ${calculated[0].tahun}`;
+  $('saveStatus').textContent=`Formula Jogja ter-update: ${names} ${calculated[0].tahun}${snapshotWarning||' • Snapshot input tersimpan'}`;
   await loadData();
   const selected=+$('upMonth').value;
   const shown=calculated.find(d=>d.bulan===selected)||calculated[calculated.length-1];
@@ -241,7 +304,21 @@ async function saveData(){
  }finally{$('saveBtn').disabled=false;}
 }
 $('saveBtn').onclick=saveData;
-async function loadData(){let rows=[];try{const [det,bul]=await Promise.all([sb.from('susut_detail').select('*').order('tahun').order('bulan'),sb.from('susut_bulanan').select('*').order('tahun').order('bulan')]);if(!det.error&&det.data)rows=det.data.map(d=>{const n=(bul.data||[]).find(x=>+x.tahun===+d.tahun&&+x.bulan===+d.bulan)||{};return {...d,_neraca:n,energi_masuk:(+n.penerimaan||0)+(+n.terima_unit_lain||0)}})}catch(e){};for(let y=2026;y<=2030;y++)for(let m=1;m<=12;m++){const x=localStorage.getItem(`susut_${y}_${m}`);if(x&&!rows.some(r=>+r.tahun===y&&+r.bulan===m))rows.push(JSON.parse(x))}cache=rows;return rows}
+async function loadData(){
+ let rows=[];
+ try{
+  const [det,bul,snap]=await Promise.all([
+   sb.from('susut_detail').select('*').order('tahun').order('bulan'),
+   sb.from('susut_bulanan').select('*').order('tahun').order('bulan'),
+   sb.from('susut_input_snapshot').select('*').order('tahun').order('bulan')
+  ]);
+  if(!det.error&&det.data)rows=det.data.map(d=>{const n=(bul.data||[]).find(x=>+x.tahun===+d.tahun&&+x.bulan===+d.bulan)||{};return {...d,_neraca:n,energi_masuk:(+n.penerimaan||0)+(+n.terima_unit_lain||0)}});
+  snapshots=(!snap.error&&snap.data)?snap.data:[];
+ }catch(e){console.error('loadData',e)}
+ for(let y=2026;y<=2030;y++)for(let m=1;m<=12;m++){const x=localStorage.getItem(`susut_${y}_${m}`);if(x&&!rows.some(r=>+r.tahun===y&&+r.bulan===m))rows.push(JSON.parse(x))}
+ cache=rows;
+ return rows;
+}
 function findData(y,m){return cache.find(r=>+r.tahun===+y&&+r.bulan===+m)}
 function metricCard(name,d,key,kwhKey){return `<div class="component"><div class="name">${name}</div><div class="num">${pc(d[key])}</div><div class="subnum">${fmt(d[kwhKey])} kWh</div></div>`}
 function renderSingle(y,m){const d=findData(y,m);if(!d){$('monitorBody').innerHTML=`<div class="card empty">Data <b>${MONTHS[m-1]} ${y}</b> belum tersimpan.</div>`;return}$('monitorBody').innerHTML=`<div class="tree"><div class="rootCard"><small>SUSUT DISTRIBUSI • ${MONTHS[m-1].toUpperCase()} ${y}</small><div class="big">${pc(d.susut_distribusi)}</div><small>${fmt(d.susut_distribusi_kwh)} kWh</small></div><div class="branch"><div class="branchCol"><div class="branchHead tech"><small>SUSUT TEKNIS</small><div class="big">${pc(d.susut_teknis)}</div><small>${fmt(d.susut_teknis_kwh)} kWh</small></div><div class="components">${metricCard('JTM',d,'jtm_persen','jtm_kwh')}${metricCard('Gardu / Trafo',d,'gardu_persen','gardu_kwh')}${metricCard('JTR',d,'jtr_persen','jtr_kwh')}${metricCard('SR',d,'sr_persen','sr_kwh')}</div></div><div class="branchCol"><div class="branchHead non"><small>SUSUT NONTEKNIS</small><div class="big ${d.susut_nonteknis<=0?'good':''}">${pc(d.susut_nonteknis)}</div><small>Distribusi − Teknis</small></div><div class="p2tlbox"><b>P2TL ${fmt(d.p2tl_kwh)} kWh</b><div class="desc">Kontribusi ${fmt(d.p2tl_poin)} poin • Nonteknis tanpa kontribusi P2TL ${pc(d.nonteknis_tanpa_p2tl)}</div></div></div></div></div>`}
@@ -261,7 +338,159 @@ function periodKwh(d,key){if(!d)return null;if(key==='susut_teknis')return ['jtm
 function dcVals(a,b,labelA,labelB,ka=null,kb=null){return `<div class="dc-vals"><div class="dc-v"><b>${dval(a)}</b><small>${labelA}</small>${ka==null?'':`<div class="dc-kwh">${fmt(ka)} kWh</div>`}</div><div class="dc-v"><b>${dval(b)}</b><small>${labelB}</small>${kb==null?'':`<div class="dc-kwh">${fmt(kb)} kWh</div>`}</div></div>`}
 function dcMetric(name,cls,a,b,key,labelA,labelB){const ka=periodKwh(a,key),kb=periodKwh(b,key);return `<div class="dc-node ${cls}"><div class="dc-title">${name}</div>${dcVals(a?.[key],b?.[key],labelA,labelB,ka,kb)}${deltaHTML(a?.[key],b?.[key])}${deltaKwhHTML(ka,kb)}</div>`}
 function dcComp(cls,name,a,b,key,kwh,labelA,labelB){return `<div class="dc-node ${cls}"><div class="dc-comp-row"><div class="dc-title">${name}</div><div class="dc-v"><b>${dval(a?.[key])}</b><small>${labelA}</small><div class="dc-kwh">${a?.[kwh]==null?'–':fmt(a[kwh])+' kWh'}</div></div><div class="dc-v"><b>${dval(b?.[key])}</b><small>${labelB}</small><div class="dc-kwh">${b?.[kwh]==null?'–':fmt(b[kwh])+' kWh'}</div></div><div>${deltaHTML(a?.[key],b?.[key])}${deltaKwhHTML(a?.[kwh],b?.[kwh])}</div></div></div>`}
-function renderPeriodCompare(){const y=+$('periodYear').value,t=$('periodType').value,va=$('periodA').value,vb=$('periodB').value,a=aggregatePeriod(y,t,va),b=aggregatePeriod(y,t,vb),la=periodLabel(t,va,y),lb=periodLabel(t,vb,y),sa=shortPeriodLabel(t,va),sb=shortPeriodLabel(t,vb);const incomplete=x=>x&&x._count<x._need; $('monitorBody').innerHTML=`<div class="card"><h3 style="margin:0">Analisis Dupont · ${la} vs ${lb}</h3><p class="desc">Distribusi → Teknis / Nonteknis → JTM · Gardu · JTR · SR${incomplete(a)||incomplete(b)?' · periode yang belum lengkap dihitung hanya dari bulan yang tersedia':''}</p><div class="dc-flow"><div class="dc-col">${dcMetric('Sungai Penuh · Susut Distribusi','dist',a,b,'susut_distribusi',sa,sb)}</div><div class="dc-col">${dcMetric('Susut Teknis','tech',a,b,'susut_teknis',sa,sb)}${dcMetric('Susut Nonteknis','non',a,b,'susut_nonteknis',sa,sb)}</div><div class="dc-col">${dcComp('jtm','JTM',a,b,'jtm_persen','jtm_kwh',sa,sb)}${dcComp('gardu','Gardu',a,b,'gardu_persen','gardu_kwh',sa,sb)}${dcComp('jtr','JTR',a,b,'jtr_persen','jtr_kwh',sa,sb)}${dcComp('sr','SR',a,b,'sr_persen','sr_kwh',sa,sb)}</div></div></div>`}
+function snapForPeriod(y,type,v){const ms=periodMonths(type,v);const m=ms[ms.length-1];return snapshots.find(x=>+x.tahun===+y&&+x.bulan===+m)||null}
+function rawValue(v){if(v==null||v==='')return'–';if(typeof v==='number')return fmt(v);const n=Number(v);return Number.isFinite(n)?fmt(n):String(v)}
+function renderAssetComparison(y,type,va,vb){
+ const sa=snapForPeriod(y,type,va),sb=snapForPeriod(y,type,vb),la=periodLabel(type,va,y),lb=periodLabel(type,vb,y);
+ if(!sa||!sb)return `<div class="card asset-card"><div class="asset-head"><div><h3 style="margin:0">Data Asset</h3><p class="desc">Snapshot menggunakan bulan terakhir dari periode yang dipilih.</p></div></div><div class="notice warn">Snapshot Data Asset belum lengkap untuk ${!sa?la:lb}. Upload ulang workbook aktual lalu klik Hitung & Simpan Jan–Des agar snapshot tersimpan.</div></div>`;
+ const A=Array.isArray(sa.data_asset)?sa.data_asset:[], B=Array.isArray(sb.data_asset)?sb.data_asset:[];
+ const mb=new Map(B.map(x=>[String(x.label||'').trim().toLowerCase(),x]));
+ const rows=[]; const seen=new Set();
+ for(const x of A){const k=String(x.label||'').trim().toLowerCase();if(!k||seen.has(k))continue;seen.add(k);const z=mb.get(k);const av=x.value,bv=z?.value;const an=Number(av),bn=Number(bv);let d='–',cl='flat';if(Number.isFinite(an)&&Number.isFinite(bn)){const diff=bn-an;d=(diff>0?'+':'')+fmt(diff);cl=Math.abs(diff)<1e-12?'flat':diff>0?'pos':'neg'}rows.push(`<tr><td>${escapeHTML(x.label)}</td><td>${rawValue(av)}</td><td>${rawValue(bv)}</td><td class="asset-delta ${cl}">${d}</td></tr>`)}
+ for(const x of B){const k=String(x.label||'').trim().toLowerCase();if(!k||seen.has(k))continue;seen.add(k);rows.push(`<tr><td>${escapeHTML(x.label)}</td><td>–</td><td>${rawValue(x.value)}</td><td class="asset-delta flat">–</td></tr>`)}
+ return `<div class="card asset-card"><div class="asset-head"><div><h3 style="margin:0">Data Asset Lengkap</h3><p class="desc">Bulanan = snapshot bulan tersebut · Triwulan = Mar/Jun/Sep/Des · Semester = Jun/Des.</p></div><span class="status">${la} vs ${lb}</span></div><div class="asset-table-wrap"><table class="asset-table"><thead><tr><th>Data Asset</th><th>${la}</th><th>${lb}</th><th>Perubahan</th></tr></thead><tbody>${rows.join('')}</tbody></table></div></div>`;
+}
+function renderPeriodCompare(){const y=+$('periodYear').value,t=$('periodType').value,va=$('periodA').value,vb=$('periodB').value,a=aggregatePeriod(y,t,va),b=aggregatePeriod(y,t,vb),la=periodLabel(t,va,y),lb=periodLabel(t,vb,y),sa=shortPeriodLabel(t,va),sb=shortPeriodLabel(t,vb);const incomplete=x=>x&&x._count<x._need; $('monitorBody').innerHTML=`<div class="card"><h3 style="margin:0">Analisis Dupont · ${la} vs ${lb}</h3><p class="desc">Distribusi → Teknis / Nonteknis → JTM · Gardu · JTR · SR${incomplete(a)||incomplete(b)?' · periode yang belum lengkap dihitung hanya dari bulan yang tersedia':''}</p><div class="dc-flow"><div class="dc-col">${dcMetric('Sungai Penuh · Susut Distribusi','dist',a,b,'susut_distribusi',sa,sb)}</div><div class="dc-col">${dcMetric('Susut Teknis','tech',a,b,'susut_teknis',sa,sb)}${dcMetric('Susut Nonteknis','non',a,b,'susut_nonteknis',sa,sb)}</div><div class="dc-col">${dcComp('jtm','JTM',a,b,'jtm_persen','jtm_kwh',sa,sb)}${dcComp('gardu','Gardu',a,b,'gardu_persen','gardu_kwh',sa,sb)}${dcComp('jtr','JTR',a,b,'jtr_persen','jtr_kwh',sa,sb)}${dcComp('sr','SR',a,b,'sr_persen','sr_kwh',sa,sb)}</div></div></div>${renderAssetComparison(y,t,va,vb)}`}
+
+
+/* ===== PROGNOSA H+1 ===== */
+function escapeHTML(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function deepCopy(v){return JSON.parse(JSON.stringify(v??null))}
+function normLabel(v){return String(v||'').trim().toLowerCase()}
+function snapMap(arr){const m={};(Array.isArray(arr)?arr:[]).forEach(x=>{if(x&&x.label!=null)m[normLabel(x.label)]=x});return m}
+function snapNum(arr,key){const x=snapMap(arr)[normLabel(key)];return x==null?0:num(x.value)}
+function setSnapNum(arr,key,val){const k=normLabel(key),a=Array.isArray(arr)?arr:[],x=a.find(z=>normLabel(z.label)===k);if(x)x.value=Number(val)||0;else a.push({label:key,value:Number(val)||0});return a}
+function latestActualRow(){return [...cache].filter(x=>Number.isFinite(+x.tahun)&&Number.isFinite(+x.bulan)).sort((a,b)=>(+a.tahun*12+ +a.bulan)-(+b.tahun*12+ +b.bulan)).at(-1)||null}
+function nextYM(y,m){return m===12?{tahun:+y+1,bulan:1}:{tahun:+y,bulan:+m+1}}
+function ymIndex(y,m){return +y*12+(+m-1)}
+function daysIn(y,m){return new Date(+y,+m,0).getDate()}
+function historySnapsBefore(y,m){const t=ymIndex(y,m);return [...snapshots].filter(x=>ymIndex(x.tahun,x.bulan)<t).sort((a,b)=>ymIndex(a.tahun,a.bulan)-ymIndex(b.tahun,b.bulan)).slice(-12)}
+function weightedDaily(history,label,targetY,targetM){
+ const vals=history.map(s=>({s,v:snapNum(s.neraca,label)})).filter(x=>Number.isFinite(x.v)&&x.v!==0).map(x=>({...x,d:x.v/daysIn(x.s.tahun,x.s.bulan)}));
+ if(!vals.length)return snapNum(history.at(-1)?.neraca||[],label)||0;
+ const last3=vals.slice(-3),avg=a=>a.length?a.reduce((z,x)=>z+x.d,0)/a.length:0, a3=avg(last3),a12=avg(vals);
+ const same=vals.find(x=>+x.s.tahun===+targetY-1&&+x.s.bulan===+targetM);
+ const daily=same?(.5*same.d+.3*a3+.2*a12):(.6*a3+.4*a12);
+ return daily*daysIn(targetY,targetM);
+}
+function buildAutoNeraca(baseSnap,targetY,targetM,history){
+ const arr=deepCopy(baseSnap.neraca||[]);
+ for(const x of arr){if(typeof x.value==='number'||(x.value!==null&&x.value!==''&&Number.isFinite(Number(x.value))))x.value=weightedDaily(history,x.label,targetY,targetM)}
+ return arr;
+}
+function assetCategory(label){const k=normLabel(label);if(k.includes('trafo')||k.includes('kva')||k.includes('inti ')||k.includes('belitan'))return'TRAFO';if(k.includes('pelanggan'))return'PELANGGAN';if(k.includes('penyulang')||k.includes('jaringan tegangan menengah')||k.includes('jtm')||k==='rek tm'||k.includes('tegangan operasi tm'))return'JTM';if(k.includes('jurusan')||k.includes('jaringan tegangan rendah')||k.includes('jtr')||k==='rek tr')return'JTR';if(k.includes('sambungan rumah')||k==='rek sr'||k.includes(' sr'))return'SR';return'LAINNYA'}
+function isNumericSnap(x){return x&&x.value!==null&&x.value!==''&&Number.isFinite(Number(x.value))}
+function adjRow(x,kind,index){const base=Number(x.value)||0,step=Math.abs(base)<=2?.01:1;return `<div class="adj-row"><div class="adj-label">${escapeHTML(x.label)}</div><div class="adj-base"><small>Aktual</small><b>${fmt(base)}</b></div><div class="adj-box"><button type="button" onclick="bumpAdj('${kind}',${index},-${step})">−</button><input id="adj_${kind}_${index}" data-kind="${kind}" data-index="${index}" type="number" step="${step}" value="0" oninput="refreshAdjFinal('${kind}',${index})"><button type="button" onclick="bumpAdj('${kind}',${index},${step})">+</button></div><div class="adj-final"><small>H+1</small><b id="final_${kind}_${index}">${fmt(base)}</b></div></div>`}
+function groupHTML(title,items,kind,open=false){return `<details class="prog-group" ${open?'open':''}><summary>${title} <span class="status">(${items.length} parameter)</span></summary><div class="prog-group-body">${items.length?items.map(({x,i})=>adjRow(x,kind,i)).join(''):'<div class="desc">Tidak ada parameter numerik pada kelompok ini.</div>'}</div></details>`}
+function bumpAdj(kind,index,delta){const el=$(`adj_${kind}_${index}`);if(!el)return;el.value=(Number(el.value)||0)+delta;refreshAdjFinal(kind,index)}
+function refreshAdjFinal(kind,index){const src=kind==='asset'?progState?.baseAsset:progState?.baseLm;if(!src||!src[index])return;const base=Number(src[index].value)||0,delta=Number($(`adj_${kind}_${index}`)?.value)||0;const out=$(`final_${kind}_${index}`);if(out)out.textContent=fmt(base+delta)}
+function getAdjusted(base,kind){const a=deepCopy(base||[]);a.forEach((x,i)=>{if(!isNumericSnap(x))return;const d=Number($(`adj_${kind}_${i}`)?.value)||0;x.value=(Number(x.value)||0)+d});return a}
+function findCustomerLabel(arr,type){const A=Array.isArray(arr)?arr:[];const words=type==='tr'?['pelanggan tr','jumlah pelanggan tr']:type==='tm'?['pelanggan tm','jumlah pelanggan tm']:['jumlah pelanggan','total pelanggan'];for(const w of words){const x=A.find(z=>normLabel(z.label)===w||normLabel(z.label).includes(w));if(x)return x.label}return null}
+function syncCustomerTotal(asset){
+ const trLab=findCustomerLabel(asset,'tr'),tmLab=findCustomerLabel(asset,'tm'),totLab=findCustomerLabel(asset,'total');
+ if(trLab&&tmLab&&totLab&&normLabel(totLab)!==normLabel(trLab)&&normLabel(totLab)!==normLabel(tmLab))setSnapNum(asset,totLab,snapNum(asset,trLab)+snapNum(asset,tmLab));
+}
+function scaleSrWithCustomers(baseAsset,finalAsset){
+ const trLab=findCustomerLabel(baseAsset,'tr'),srLab=(baseAsset||[]).find(x=>normLabel(x.label).includes('sambungan rumah'))?.label;
+ if(!trLab||!srLab)return;
+ const bplg=snapNum(baseAsset,trLab),fplg=snapNum(finalAsset,trLab),bsr=snapNum(baseAsset,srLab);
+ if(bplg>0&&fplg!==bplg)setSnapNum(finalAsset,srLab,bsr*(fplg/bplg));
+}
+function historicalKwhPerCustDay(history,saleLabel,custType){const vals=[];for(const s of history){const cLab=findCustomerLabel(s.data_asset||[],custType);if(!cLab)continue;const c=snapNum(s.data_asset,cLab),e=snapNum(s.neraca,saleLabel);if(c>0&&e>0)vals.push(e/c/daysIn(s.tahun,s.bulan))}return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0}
+function applyCustomerImpact(neraca,baseAsset,finalAsset,history,targetY,targetM){
+ const active=Math.max(0,Math.min(100,Number($('activeCustomerPct')?.value)||0))/100,days=daysIn(targetY,targetM);
+ let deltaSales=0;
+ for(const [type,sale] of [['tr','Penjualan TR'],['tm','Penjualan TM']]){const bLab=findCustomerLabel(baseAsset,type),fLab=findCustomerLabel(finalAsset,type);if(!bLab||!fLab)continue;const d=snapNum(finalAsset,fLab)-snapNum(baseAsset,bLab),rate=historicalKwhPerCustDay(history,sale,type);const impact=d*rate*days*active;if(impact){setSnapNum(neraca,sale,snapNum(neraca,sale)+impact);deltaSales+=impact}}
+ if(deltaSales){const ratios=[];for(const s of history){const masuk=snapNum(s.neraca,'Penerimaan')+snapNum(s.neraca,'Terima Unit Lain'),jual=snapNum(s.neraca,'Penjualan TT')+snapNum(s.neraca,'Penjualan TM')+snapNum(s.neraca,'Penjualan TR');if(masuk>0&&jual>0)ratios.push(jual/masuk)}const ratio=ratios.length?ratios.reduce((a,b)=>a+b,0)/ratios.length:.9;setSnapNum(neraca,'Penerimaan',snapNum(neraca,'Penerimaan')+deltaSales/Math.max(.1,ratio))}
+}
+function renderNeracaControls(arr){return `<div class="card"><h3 style="margin-top:0">Neraca H+1</h3><p class="desc">Nilai awal dihitung otomatis dari histori. Isi kolom koreksi jika ada informasi operasi yang lebih baru.</p><div class="neraca-grid" style="margin-top:12px">${(arr||[]).filter(isNumericSnap).map((x,i)=>`<div class="neraca-item"><label>${escapeHTML(x.label)}</label><div class="neraca-meta">Auto: <b>${fmt(x.value)}</b> · koreksi (+/−)</div><input id="ner_delta_${i}" data-ner-index="${i}" type="number" step="1" value="0"></div>`).join('')}</div></div>`}
+function getFinalNeraca(base){const a=deepCopy(base||[]);let j=0;(a||[]).forEach((x)=>{if(!isNumericSnap(x))return;const el=$(`ner_delta_${j}`);x.value=(Number(x.value)||0)+(Number(el?.value)||0);j++});return a}
+function initPrognosa(){
+ const actual=latestActualRow();
+ if(!actual){$('progHero').innerHTML='<div class="empty" style="grid-column:1/-1">Belum ada data aktual Susut.</div>';$('progControls').innerHTML='';$('progResult').innerHTML='';return}
+ const baseSnap=snapshots.find(x=>+x.tahun===+actual.tahun&&+x.bulan===+actual.bulan);
+ const target=nextYM(actual.tahun,actual.bulan);
+ $('progHero').innerHTML=`<div class="prog-period"><small>AKTUAL TERAKHIR</small><b>${MONTHS[actual.bulan-1]} ${actual.tahun}</b><div class="desc">Susut ${pc(actual.susut_distribusi)}</div></div><div class="prog-arrow">→</div><div class="prog-period proj"><small>PROGNOSA H+1</small><b>${MONTHS[target.bulan-1]} ${target.tahun}</b><div class="desc">Tidak mengubah data Monitoring.</div></div>`;
+ if(!baseSnap){$('progControls').innerHTML='<div class="card"><div class="notice warn">Snapshot input bulan aktual terakhir belum ada. Buka Update Susut, upload workbook aktual, lalu klik <b>Hitung & Simpan Jan–Des</b> sekali agar Data Asset + Neraca + LM-LF tersimpan.</div></div>';$('progResult').innerHTML='';return}
+ const history=historySnapsBefore(target.tahun,target.bulan),autoNeraca=buildAutoNeraca(baseSnap,target.tahun,target.bulan,history),baseAsset=deepCopy(baseSnap.data_asset||[]),baseLm=deepCopy(baseSnap.lm_lf||[]);
+ progState={actual,baseSnap,target,history,baseAsset,baseLm,autoNeraca}; progResult=null;
+ const cats={TRAFO:[],PELANGGAN:[],JTM:[],JTR:[],SR:[],LAINNYA:[]};baseAsset.forEach((x,i)=>{if(isNumericSnap(x))cats[assetCategory(x.label)].push({x,i})});
+ const lmItems=baseLm.map((x,i)=>({x,i})).filter(z=>isNumericSnap(z.x));
+ $('progControls').innerHTML=`<div class="card"><h3 style="margin-top:0">Penyesuaian Data Asset H+1</h3><p class="desc">Masukkan perubahan (+/−) dari posisi aktual. SR otomatis mengikuti rasio Sambungan Rumah : pelanggan TR jika baris pelanggan TR tersedia.</p><div class="prog-groups">${groupHTML('TRAFO',cats.TRAFO,'asset',true)}${groupHTML('PELANGGAN',cats.PELANGGAN,'asset',true)}${groupHTML('JTM',cats.JTM,'asset')}${groupHTML('JTR',cats.JTR,'asset')}${groupHTML('SR',cats.SR,'asset')}${groupHTML('PARAMETER LAIN',cats.LAINNYA,'asset')}</div></div><div class="card"><h3 style="margin-top:0">Penyesuaian LM-LF H+1</h3><p class="desc">Baseline diambil dari LM-LF bulan aktual terakhir.</p><div class="prog-groups">${groupHTML('LM-LF',lmItems,'lm',true)}</div></div>${renderNeracaControls(autoNeraca)}<div class="card"><div class="prog-actions"><button class="btn" id="calcProgBtn">Hitung Prognosa</button><button class="btn secondary" id="saveProgBtn" disabled>Simpan Prognosa</button><span id="progStatus" class="status">Belum dihitung.</span></div></div>`;
+ $('calcProgBtn').onclick=calculatePrognosa;
+ $('saveProgBtn').onclick=savePrognosa;
+ $('progResult').innerHTML='';
+}
+function calculatePrognosa(){
+ if(!progState)return;
+ const asset=getAdjusted(progState.baseAsset,'asset'); syncCustomerTotal(asset); scaleSrWithCustomers(progState.baseAsset,asset);
+ const lm=getAdjusted(progState.baseLm,'lm');
+ let ner=deepCopy(progState.autoNeraca); applyCustomerImpact(ner,progState.baseAsset,asset,progState.history,progState.target.tahun,progState.target.bulan); ner=getFinalNeraca(ner);
+ const hasil=calculatePrognosaExact(progState.target.tahun,progState.target.bulan,asset,ner,lm);
+ progResult={data_asset:asset,lm_lf:lm,neraca:ner,hasil};
+ renderProgResult(progState.actual,hasil,progState.target);
+ $('saveProgBtn').disabled=false;$('progStatus').textContent='Sudah dihitung • belum disimpan.';
+}
+function calculatePrognosaExact(year,month,dataAsset,neraca,lmLf){
+ const am=snapMap(dataAsset),nm=snapMap(neraca),lm=snapMap(lmLf),get=(m,k)=>num(m[normLabel(k)]?.value),ag=k=>get(am,k),ng=k=>get(nm,k),lg=k=>get(lm,k);
+ const penerimaan=ng('penerimaan'),terima=ng('terima unit lain'),tt=ng('penjualan tt'),tm=ng('penjualan tm'),tr=ng('penjualan tr'),kirim=ng('kirim unit lain'),sendiri=ng('pemakaian sendiri'),eminTT=ng('e-min tt'),eminTM=ng('e-min tm'),eminTR=ng('e-min tr'),p2tl=ng('p2tl');
+ if(!penerimaan)throw Error('Penerimaan prognosa bernilai 0. Cek Neraca H+1.');
+ const masuk=penerimaan+terima,loss=masuk-tt-tm-tr-kirim-sendiri+eminTT+eminTM+eminTR,dist=loss/masuk*100;
+ const hours=new Date(year,month,0).getDate()*24;
+ const llf=lf=>(.3*lf)+(.7*lf*lf);
+ const safe=(v,fallback)=>Number.isFinite(+v)&&+v!==0?+v:fallback;
+ const vTM=safe(ag('tegangan operasi tm'),20.3);
+ const vTR=safe(lg('tegangan jtr'),.4);
+ const lfTM=safe(lg('lf tm'),safe(ag('faktor beban penyulang[lf]'),.59));
+ const pfTM=safe(lg('pf tm'),safe(ag('faktor daya penyulang [pf]'),.99));
+ const lfTrafo=safe(lg('lf trafo'),safe(ag('faktor beban trafo[lf]'),.46));
+ const pfTrafo=safe(lg('pf trafo'),safe(ag('faktor daya trafo [pf]'),.9));
+ const lfTR=safe(lg('lf tr'),safe(ag('faktor beban jtr[lf]'),.42));
+ const pfTR=safe(lg('pf jtr'),safe(ag('faktor daya jtr [pf]'),.82));
+ const lfSR=.40, pfSR=safe(lg('pf sr'),safe(ag('faktor daya sr [pf]'),.81)), koreksiSR=1.861344537815126;
+ const nPeny=safe(ag('jumlah penyulang'),1), panjangJTM=safe(ag('jaringan tegangan menengah [jtm]'),0), rTM=safe(ag('rek tm'),0);
+ const nTrafo=safe(ag('jumlah trafo'),1), kvaTrafo=safe(ag('jumlah kva'),1), rugiBesi=safe(ag('inti trafo'),0), rugiTembaga=safe(ag('belitan trafo'),0);
+ const nJur=safe(ag('jumlah jurusan'),1), panjangJTR=safe(ag('jaringan tegangan rendah [jtr]'),0), rTR=safe(ag('rek tr'),0);
+ const nPlg=safe(ag('jumlah pelanggan'),1), panjangSR=safe(ag('sambungan rumah'),0), rSR=safe(ag('rek sr'),0);
+ const inputJTM=masuk-tt-kirim;
+ const panjangRataJTM=panjangJTM/nPeny, nodePeny=Math.ceil(nTrafo/nPeny);
+ const fkJTM=panjangRataJTM<=15?1:Math.max(.3,.91-((panjangRataJTM-15)/panjangRataJTM)*.75);
+ const bebanTM=inputJTM/(nPeny*lfTM*pfTM*hours);
+ const iekTM=Math.sqrt((bebanTM* bebanTM + bebanTM* bebanTM/nodePeny + Math.pow(bebanTM/nodePeny,2))/3);
+ const rugiPuncakJTM=3*Math.pow(iekTM/(1.732*vTM),2)*(rTM/1000)*panjangRataJTM*fkJTM;
+ const jtm=nPeny*rugiPuncakJTM*llf(lfTM)*hours;
+ const inputTrafo=inputJTM-jtm-tm, kvaRata=kvaTrafo/nTrafo, bebanTrafo=inputTrafo/(nTrafo*pfTrafo*hours), loading=bebanTrafo/kvaRata;
+ const kvaBucket=kvaRata>900?1000:kvaRata>700?800:kvaRata>550?630:kvaRata>450?500:kvaRata>350?400:kvaRata>275?315:kvaRata>225?250:kvaRata>180?200:kvaRata>130?160:kvaRata>75?100:kvaRata>35?50:kvaRata>10?25:25;
+ const loadBucket=loading>.9?1.1:loading>.8?.9:loading>.7?.8:loading>.6?.7:loading>.5?.6:loading>.4?.5:loading>.3?.4:loading>.2?.3:loading>.1?.2:.1;
+ const trafoTable={'.1':{25:4.91,50:4.90,100:4.90,160:4.08,200:3.92,250:3.92,315:3.99,400:3.79,500:3.59,630:3.37,800:3.57,1000:3.76},'.2':{25:2.70,50:2.68,100:2.68,160:2.22,200:2.14,250:2.13,315:2.17,400:2.06,500:1.95,630:1.83,800:1.95,1000:2.05},'.3':{25:2.08,50:2.05,100:2.05,160:1.68,200:1.63,250:1.61,315:1.65,400:1.56,500:1.48,630:1.39,800:1.48,1000:1.56},'.4':{25:1.84,50:1.81,100:1.81,160:1.47,200:1.43,250:1.41,315:1.45,400:1.36,500:1.30,630:1.22,800:1.30,1000:1.38},'.5':{25:1.77,50:1.72,100:1.72,160:1.39,200:1.36,250:1.34,315:1.37,400:1.29,500:1.23,630:1.15,800:1.24,1000:1.31},'.6':{25:1.78,50:1.72,100:1.72,160:1.38,200:1.36,250:1.33,315:1.36,400:1.28,500:1.22,630:1.14,800:1.24,1000:1.31},'.7':{25:1.83,50:1.76,100:1.76,160:1.41,200:1.39,250:1.35,315:1.39,400:1.30,500:1.24,630:1.16,800:1.26,1000:1.34},'.8':{25:1.91,50:1.83,100:1.83,160:1.46,200:1.44,250:1.40,315:1.44,400:1.35,500:1.28,630:1.20,800:1.31,1000:1.39},'.9':{25:2.00,50:1.92,100:1.92,160:1.53,200:1.51,250:1.46,315:1.51,400:1.41,500:1.34,630:1.26,800:1.37,1000:1.46},'1':{25:2.12,50:2.02,100:2.02,160:1.60,200:1.59,250:1.54,315:1.58,400:1.48,500:1.41,630:1.32,800:1.44,1000:1.53},'1.1':{25:2.24,50:2.13,100:2.13,160:1.69,200:1.67,250:1.62,315:1.67,400:1.56,500:1.48,630:1.39,800:1.52,1000:1.62}};
+ const loadKey=String(loadBucket).replace(/^0/,'');
+ const persenTrafo=(trafoTable[loadKey]||trafoTable['.5'])[kvaBucket];
+ const gardu=inputTrafo*(persenTrafo/100);
+ const inputJTR=inputTrafo-gardu-sendiri, panjangRataJTR=panjangJTR/nJur, nodeJur=Math.ceil(panjangRataJTR/.05);
+ const fkJTR=panjangRataJTR<=.1?.65:panjangRataJTR>=2?1:1-(2-panjangRataJTR)*.368421052631579/(2+.1-panjangRataJTR);
+ const bebanTR=inputJTR/(nJur*lfTR*pfTR*hours);
+ const iekTR=Math.sqrt((bebanTR*bebanTR+bebanTR*bebanTR/nodeJur+Math.pow(bebanTR/nodeJur,2))/3);
+ const rugiPuncakJTR=3*Math.pow(iekTR/(1.732*vTR),2)*(rTR/1000)*panjangRataJTR*fkJTR;
+ const jtr=nJur*rugiPuncakJTR*llf(lfTR)*hours;
+ const inputSR=inputJTR-jtr, panjangRataSR=panjangSR/nPlg, vFasa=vTR/Math.sqrt(3);
+ const iekSR=inputSR/(nPlg*lfSR*pfSR*hours);
+ const rugiPuncakSR=(2*(rSR/1000)*panjangRataSR*Math.pow(iekSR/vFasa,2))*koreksiSR;
+ const sr=(nPlg*rugiPuncakSR*hours)+(nPlg*hours/1000);
+ const techKwh=jtm+gardu+jtr+sr,tech=techKwh/masuk*100,non=dist-tech,p2tlPoin=p2tl/masuk*100;
+ return {tahun:year,bulan:month,penerimaan,terima_unit_lain:terima,jual_tt:tt,jual_tm:tm,jual_tr:tr,kirim_unit_lain:kirim,pemakaian_sendiri:sendiri,emin_tt:eminTT,emin_tm:eminTM,emin_tr:eminTR,energi_masuk:masuk,susut_distribusi:dist,susut_distribusi_kwh:loss,susut_teknis:tech,susut_teknis_kwh:techKwh,susut_nonteknis:non,jtm_persen:jtm/masuk*100,jtm_kwh:jtm,gardu_persen:gardu/masuk*100,gardu_kwh:gardu,jtr_persen:jtr/masuk*100,jtr_kwh:jtr,sr_persen:sr/masuk*100,sr_kwh:sr,p2tl_kwh:p2tl,p2tl_poin:p2tlPoin,nonteknis_tanpa_p2tl:non+p2tlPoin};
+}
+function resultDelta(a,b){const d=(Number(b)||0)-(Number(a)||0),cl=Math.abs(d)<.005?'neutral':d<0?'good':'bad';return `<div class="delta ${cl}">${d>0?'+':''}${fmt(d)} pp</div>`}
+function renderProgResult(actual,h,target){
+ $('progResult').innerHTML=`<div class="card"><h3 style="margin-top:0">Hasil Prognosa · ${MONTHS[target.bulan-1]} ${target.tahun}</h3><p class="desc">Perbandingan aktual terakhir vs hasil H+1. Susut teknis/nonteknis dihitung dengan rumus Formula Jogja yang sama.</p><div class="result-grid" style="margin-top:14px"><div class="result-card"><small>SUSUT DISTRIBUSI</small><b>${pc(h.susut_distribusi)}</b>${resultDelta(actual.susut_distribusi,h.susut_distribusi)}</div><div class="result-card"><small>SUSUT TEKNIS</small><b>${pc(h.susut_teknis)}</b>${resultDelta(actual.susut_teknis,h.susut_teknis)}</div><div class="result-card"><small>SUSUT NONTEKNIS</small><b>${pc(h.susut_nonteknis)}</b>${resultDelta(actual.susut_nonteknis,h.susut_nonteknis)}</div></div><div class="result-components"><div class="result-card"><small>JTM</small><b>${pc(h.jtm_persen)}</b></div><div class="result-card"><small>GARDU</small><b>${pc(h.gardu_persen)}</b></div><div class="result-card"><small>JTR</small><b>${pc(h.jtr_persen)}</b></div><div class="result-card"><small>SR</small><b>${pc(h.sr_persen)}</b></div></div></div>`;
+}
+async function savePrognosa(){
+ if(!progState||!progResult)return;
+ $('saveProgBtn').disabled=true;$('progStatus').textContent='Menyimpan prognosa…';
+ const row={tahun:progState.target.tahun,bulan:progState.target.bulan,base_tahun:progState.actual.tahun,base_bulan:progState.actual.bulan,data_asset:progResult.data_asset,lm_lf:progResult.lm_lf,neraca:progResult.neraca,hasil:progResult.hasil,updated_at:new Date().toISOString()};
+ const {error}=await sb.from('susut_prognosa').upsert([row],{onConflict:'tahun,bulan'});
+ if(error){console.error(error);$('progStatus').textContent='Gagal menyimpan prognosa.';alert('Gagal menyimpan prognosa: '+error.message)}else{$('progStatus').textContent=`Tersimpan di susut_prognosa • ${MONTHS[row.bulan-1]} ${row.tahun}`}
+ $('saveProgBtn').disabled=false;
+}
 $('periodType').onchange=()=>{setupPeriods();renderPeriodCompare()};$('periodA').onchange=renderPeriodCompare;$('periodB').onchange=renderPeriodCompare;$('periodYear').onchange=()=>{setupPeriods();renderPeriodCompare()};
 (async()=>{await loadData();$('periodYear').innerHTML=[2026,2027,2028,2029,2030].map(y=>`<option value="${y}">${y}</option>`).join('');$('periodYear').value=2026;setupPeriods();renderPeriodCompare()})();
 </script></body></html>

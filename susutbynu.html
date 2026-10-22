@@ -52,7 +52,7 @@ nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-
 <section id="update" class="panel">
  <div class="card"><h2 class="title">Update Susut</h2><p class="desc">Pilih periode yang akan diperbarui, lalu upload Excel 3 sheet untuk bulan tersebut.</p>
   <div class="controls" style="margin-top:16px"><div class="field"><label>Tahun</label><select id="upYear"></select></div><div class="field"><label>Bulan yang di-update</label><select id="upMonth"></select></div></div>
-  <div class="drop" id="drop"><b>Upload Data Asset + Neraca + LM-LF</b><p class="desc">Workbook dapat berisi histori Jan–Des. LM-LF dibaca sesuai data upload; bila Beban Puncak per Penyulang/Jurusan diisi (A), nilainya otomatis masuk ke hitungan teknis.</p><label class="btn" style="display:inline-block;margin-top:12px">Pilih Excel<input id="file" type="file" accept=".xlsx,.xls"></label><div class="fileName" id="fname">Belum ada file</div></div>
+  <div class="drop" id="drop"><b>Upload Data Asset + Neraca + LM-LF</b><p class="desc">Workbook dapat berisi histori Jan–Des. Mesin hitung teknis sudah disamakan dengan V3 / FORJOG: JTM dan JTR memakai Energi ÷ (jumlah × LF × PF × jam). Beban Puncak tetap dibaca sebagai informasi, tetapi tidak menjadi sumber hitungan.</p><label class="btn" style="display:inline-block;margin-top:12px">Pilih Excel<input id="file" type="file" accept=".xlsx,.xls"></label><div class="fileName" id="fname">Belum ada file</div></div>
  </div>
  <div id="preview" class="preview">
   <div class="card"><h3 style="margin-top:0">Preview — <span id="prevPeriod"></span></h3><div class="notice">Cek hasil dulu. Preview menampilkan bulan terpilih. Saat disimpan, sistem menghitung ulang <b>semua bulan Januari–Desember yang sudah memiliki data</b> dengan Formula Jogja.</div>
@@ -67,7 +67,7 @@ nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-
 <section id="prognosa" class="panel">
  <div class="card">
   <h2 class="title">Prognosa Susut H+1</h2>
-  <p class="desc">Simulator terpisah dari data aktual. Baseline mengambil bulan aktual terakhir. Perhitungan mengikuti mesin Excel terakhir: LM-LF dari data upload, LF SR dari Data Asset/fallback LF TR, dan Beban Puncak aktual bila tersedia.</p>
+  <p class="desc">Simulator terpisah dari data aktual. Baseline mengambil bulan aktual terakhir. Perhitungan mengikuti mesin V3 / FORJOG: LM-LF dari data upload, LF SR dari LM-LF/Data Asset dengan fallback 0,40, dan JTM/JTR memakai Energi ÷ (jumlah × LF × PF × jam).</p>
   <div id="progHero" class="prog-hero" style="margin-top:16px"><div class="empty" style="grid-column:1/-1;padding:20px">Memuat baseline prognosa…</div></div>
   <div class="prog-toolbar">
    <div class="field"><label>Efektivitas pelanggan baru</label><input id="activeCustomerPct" type="number" min="0" max="100" step="5" value="50"><div class="desc">Persentase pelanggan baru yang diasumsikan aktif memakai energi pada bulan H+1.</div></div>
@@ -161,24 +161,28 @@ async function parseExcel(file,monthOverride=null){const year=+$('upYear').value
  const llf=lf=>(.3*lf)+(.7*lf*lf);
  const safe=(v,fallback)=>Number.isFinite(+v)&&+v!==0?+v:fallback;
 
- // Parameter bulan terpilih
+ // Parameter FORJOG — mengikuti workbook Formula Yogyakarta.
  const vTM=safe(ag('tegangan operasi tm'),20.3);
- const vTR=safe(lg('tegangan jtr'),.4);
- // LM-LF menjadi sumber utama sesuai workbook upload. Data Asset hanya fallback bila parameter LM-LF kosong.
- const lfTM=safe(lg('lf tm'),safe(ag('faktor beban penyulang[lf]'),.59));
- const pfTM=safe(lg('pf tm'),safe(ag('faktor daya penyulang [pf]'),.99));
- const lfTrafo=safe(lg('lf trafo'),safe(ag('faktor beban trafo[lf]'),.46));
- const pfTrafo=safe(lg('pf trafo'),safe(ag('faktor daya trafo [pf]'),.9));
+ const vTR=safe(lg('tegangan jtr'),.385);
+ const lfTM=safe(lg('lf tm'),safe(ag('faktor beban penyulang[lf]'),.61));
+ const pfTM=safe(lg('pf tm'),safe(ag('faktor daya penyulang [pf]'),.90));
+ const lfTrafo=safe(lg('lf trafo'),safe(ag('faktor beban trafo[lf]'),.45));
+ const pfTrafo=safe(lg('pf trafo'),safe(ag('faktor daya trafo [pf]'),.85));
  const lfTR=safe(lg('lf tr'),safe(ag('faktor beban jtr[lf]'),.42));
  const pfTR=safe(lg('pf jtr'),safe(ag('faktor daya jtr [pf]'),.82));
- const pfSR=safe(lg('pf sr'),safe(ag('faktor daya sr [pf]'),.81));
- // Excel terakhir: LF SR pakai Data Asset bila tersedia; bila kosong mengikuti LF TR.
- const lfSRData=getRowOptional(am,'faktor beban sr[lf]',ac);
- const lfSR=(lfSRData!=null&&lfSRData>0)?lfSRData:lfTR;
- // Faktor Koreksi SR mengikuti data LM-LF; 1,5 hanya fallback jika sel belum diisi.
- const koreksiData=getRowOptional(lm,'faktor koreksi sr',lc);
- const koreksiSR=(koreksiData!=null&&koreksiData>0)?koreksiData:1.5;
- // Jika data beban puncak (Ampere) di LM-LF tersedia, data aktual dipakai langsung.
+ const pfSR=safe(lg('pf sr'),safe(ag('faktor daya sr [pf]'),.78));
+ const lfSR=safe(lg('lf sr'),safe(ag('faktor beban sr[lf]'),.40));
+ const koreksiSR=safe(lg('faktor koreksi sr'),1.861344537815126);
+ const lmOpt=(...keys)=>{for(const k of keys){const v=getRowOptional(lm,k,lc);if(v!=null&&Number.isFinite(+v))return +v}return null};
+ const corrManualJTM=lmOpt('fk koreksi b.puncak jtm','fk koreksi beban puncak jtm','koreksi beban puncak jtm');
+ const corrManualTrafo=lmOpt('fk koreksi b.puncak trafo','fk koreksi beban puncak trafo','koreksi beban puncak trafo');
+ const corrManualJTR=lmOpt('fk koreksi b.puncak jtr','fk koreksi beban puncak jtr','koreksi beban puncak jtr');
+ const corrManualSR=lmOpt('fk koreksi b.puncak sr','fk koreksi beban puncak sr','koreksi beban puncak sr');
+ const targetJTM=lmOpt('target simple s jtm','simple s jtm kwh');
+ const targetTrafo=lmOpt('target simple s trafo','simple s trafo kwh','target simple s gardu');
+ const targetJTR=lmOpt('target simple s jtr','simple s jtr kwh');
+ const targetSR=lmOpt('target simple s sr','simple s sr kwh');
+ // Tetap dibaca agar template lama kompatibel, tetapi dalam mode FORJOG beban puncak dihitung dari Energi/LF/PF.
  const peakPenyA=getRowOptional(lm,'beban puncak per penyulang',lc);
  const peakJurA=getRowOptional(lm,'beban puncak per jurusan',lc);
 
@@ -187,16 +191,20 @@ async function parseExcel(file,monthOverride=null){const year=+$('upYear').value
  const nJur=safe(ag('jumlah jurusan'),1), panjangJTR=safe(ag('jaringan tegangan rendah [jtr]'),0), rTR=safe(ag('rek tr'),0);
  const nPlg=safe(ag('jumlah pelanggan'),1), panjangSR=safe(ag('sambungan rumah'),0), rSR=safe(ag('rek sr'),0);
 
- // 1) JTM — alur sel E/F21:E/F30 Formula Jogja.
+ // 1) JTM — Formula Jogja E21:E30. Koreksi B.Puncak = sel Goal Seek FORJOG.
  const inputJTM=masuk-tt-kirim;
  const panjangRataJTM=panjangJTM/nPeny, nodePeny=Math.ceil(nTrafo/nPeny);
  const fkJTM=panjangRataJTM<=15?1:Math.max(.3,.91-((panjangRataJTM-15)/panjangRataJTM)*.75);
- const bebanTM=(peakPenyA!=null&&peakPenyA>0)?(1.732*vTM*peakPenyA):(inputJTM/(nPeny*lfTM*pfTM*hours));
- const iekTM=Math.sqrt((bebanTM* bebanTM + bebanTM* bebanTM/nodePeny + Math.pow(bebanTM/nodePeny,2))/3);
- const rugiPuncakJTM=3*Math.pow(iekTM/(1.732*vTM),2)*(rTM/1000)*panjangRataJTM*fkJTM;
- const jtm=nPeny*rugiPuncakJTM*llf(lfTM)*hours;
+ const bebanTM=inputJTM/(nPeny*lfTM*pfTM*hours);
+ const iekTMBase=Math.sqrt((bebanTM*bebanTM+bebanTM*(bebanTM/nodePeny)+Math.pow(bebanTM/nodePeny,2))/3);
+ const rugiPuncakJTMBase=3*Math.pow(iekTMBase/(1.732*vTM),2)*(rTM/1000)*panjangRataJTM*fkJTM;
+ const jtmBase=nPeny*rugiPuncakJTMBase*llf(lfTM)*hours;
+ const corrJTM=(corrManualJTM!=null&&corrManualJTM>0)?corrManualJTM:((targetJTM!=null&&targetJTM>0&&jtmBase>0)?Math.sqrt(targetJTM/jtmBase):1);
+ const iekTM=iekTMBase*corrJTM;
+ const rugiPuncakJTM=rugiPuncakJTMBase*corrJTM*corrJTM;
+ const jtm=jtmBase*corrJTM*corrJTM;
 
- // 2) Gardu/Trafo — tabel pembebanan TRAFO Formula Jogja.
+ // 2) Gardu/Trafo — lookup tabel pembebanan Formula Jogja (ekuivalen sel G/H26:G/H30).
  const inputTrafo=inputJTM-jtm-tm, kvaRata=kvaTrafo/nTrafo, bebanTrafo=inputTrafo/(nTrafo*pfTrafo*hours), loading=bebanTrafo/kvaRata;
  const kvaBucket=kvaRata>900?1000:kvaRata>700?800:kvaRata>550?630:kvaRata>450?500:kvaRata>350?400:kvaRata>275?315:kvaRata>225?250:kvaRata>180?200:kvaRata>130?160:kvaRata>75?100:kvaRata>35?50:kvaRata>10?25:25;
  const loadBucket=loading>.9?1.1:loading>.8?.9:loading>.7?.8:loading>.6?.7:loading>.5?.6:loading>.4?.5:loading>.3?.4:loading>.2?.3:loading>.1?.2:.1;
@@ -215,21 +223,31 @@ async function parseExcel(file,monthOverride=null){const year=+$('upYear').value
  };
  const loadKey=String(loadBucket).replace(/^0/,'');
  const persenTrafo=(trafoTable[loadKey]||trafoTable['.5'])[kvaBucket];
- const gardu=inputTrafo*(persenTrafo/100);
+ const garduBase=inputTrafo*(persenTrafo/100);
+ const corrTrafo=(corrManualTrafo!=null&&corrManualTrafo>0)?corrManualTrafo:((targetTrafo!=null&&targetTrafo>0&&garduBase>0)?targetTrafo/garduBase:1);
+ const gardu=garduBase*corrTrafo;
 
- // 3) JTR — alur sel I/J21:I/J30 Formula Jogja.
+ // 3) JTR — Formula Jogja I/J21:I/J30. FK JTR kembali formula panjang asli; bukan angka kalibrasi 0,96.
  const inputJTR=inputTrafo-gardu-sendiri, panjangRataJTR=panjangJTR/nJur, nodeJur=Math.ceil(panjangRataJTR/.05);
  const fkJTR=panjangRataJTR<=.1?.65:panjangRataJTR>=2?1:1-(2-panjangRataJTR)*.368421052631579/(2+.1-panjangRataJTR);
- const bebanTR=(peakJurA!=null&&peakJurA>0)?(1.732*vTR*peakJurA):(inputJTR/(nJur*lfTR*pfTR*hours));
- const iekTR=Math.sqrt((bebanTR*bebanTR+bebanTR*bebanTR/nodeJur+Math.pow(bebanTR/nodeJur,2))/3);
- const rugiPuncakJTR=3*Math.pow(iekTR/(1.732*vTR),2)*(rTR/1000)*panjangRataJTR*fkJTR;
- const jtr=nJur*rugiPuncakJTR*llf(lfTR)*hours;
+ const bebanTR=inputJTR/(nJur*lfTR*pfTR*hours);
+ const iekTRBase=Math.sqrt((bebanTR*bebanTR+bebanTR*(bebanTR/nodeJur)+Math.pow(bebanTR/nodeJur,2))/3);
+ const rugiPuncakJTRBase=3*Math.pow(iekTRBase/(1.732*vTR),2)*(rTR/1000)*panjangRataJTR*fkJTR;
+ const jtrBase=nJur*rugiPuncakJTRBase*llf(lfTR)*hours;
+ const corrJTR=(corrManualJTR!=null&&corrManualJTR>0)?corrManualJTR:((targetJTR!=null&&targetJTR>0&&jtrBase>0)?Math.sqrt(targetJTR/jtrBase):1);
+ const iekTR=iekTRBase*corrJTR;
+ const rugiPuncakJTR=rugiPuncakJTRBase*corrJTR*corrJTR;
+ const jtr=jtrBase*corrJTR*corrJTR;
 
- // 4) SR — alur sel K/L21:K/L30 Formula Jogja.
+ // 4) SR — Formula Jogja K/L21:K/L30 + rugi meter 1 W/pelanggan.
  const inputSR=inputJTR-jtr, panjangRataSR=panjangSR/nPlg, vFasa=vTR/Math.sqrt(3);
- const iekSR=inputSR/(nPlg*lfSR*pfSR*hours);
- const rugiPuncakSR=(2*(rSR/1000)*panjangRataSR*Math.pow(iekSR/vFasa,2))*koreksiSR;
- const sr=(nPlg*rugiPuncakSR*hours)+(nPlg*hours/1000);
+ const iekSRBase=inputSR/(nPlg*lfSR*pfSR*hours);
+ const rugiPuncakSRBase=(2*(rSR/1000)*panjangRataSR*Math.pow(iekSRBase/vFasa,2))*koreksiSR;
+ const srVarBase=nPlg*rugiPuncakSRBase*hours, srMeter=nPlg*hours/1000;
+ const corrSR=(corrManualSR!=null&&corrManualSR>0)?corrManualSR:((targetSR!=null&&targetSR>srMeter&&srVarBase>0)?Math.sqrt((targetSR-srMeter)/srVarBase):1);
+ const iekSR=iekSRBase*corrSR;
+ const rugiPuncakSR=rugiPuncakSRBase*corrSR*corrSR;
+ const sr=srVarBase*corrSR*corrSR+srMeter;
 
  const techKwh=jtm+gardu+jtr+sr,tech=techKwh/masuk*100,non=dist-tech,p2tlPoin=p2tl/masuk*100;
  return {
@@ -260,10 +278,10 @@ async function parseExcel(file,monthOverride=null){const year=+$('upYear').value
  lf_tm:lfTM, pf_tm:pfTM, lf_trafo:lfTrafo, pf_trafo:pfTrafo, lf_tr:lfTR, pf_jtr:pfTR, pf_sr:pfSR,
  lf_sr:lfSR, faktor_koreksi_sr:koreksiSR,
  beban_puncak_penyulang:peakPenyA, beban_puncak_jurusan:peakJurA,
- sumber_beban_jtm:(peakPenyA!=null&&peakPenyA>0)?'Beban Puncak Penyulang (LM-LF)':'Fallback Energi/LF/PF',
- sumber_beban_jtr:(peakJurA!=null&&peakJurA>0)?'Beban Puncak Jurusan (LM-LF)':'Fallback Energi/LF/PF',
+ sumber_beban_jtm:'FORJOG: Energi / (Penyulang × LF × PF × Jam)',
+ sumber_beban_jtr:'FORJOG: Energi / (Jurusan × LF × PF × Jam)',
  beban_tm:bebanTM, beban_tr:bebanTR,
- _bedah:{hours,vTM,vTR,lfTM,pfTM,lfTrafo,pfTrafo,lfTR,pfTR,lfSR,pfSR,koreksiSR,peakPenyA,peakJurA,nPeny,panjangJTM,rTM,nTrafo,kvaTrafo,nJur,panjangJTR,rTR,nPlg,panjangSR,rSR,inputJTM,panjangRataJTM,nodePeny,fkJTM,bebanTM,iekTM,rugiPuncakJTM,jtm,inputTrafo,kvaRata,bebanTrafo,loading,kvaBucket,loadBucket,persenTrafo,gardu,inputJTR,panjangRataJTR,nodeJur,fkJTR,bebanTR,iekTR,rugiPuncakJTR,jtr,inputSR,panjangRataSR,vFasa,iekSR,rugiPuncakSR,sr,techKwh},
+ _bedah:{hours,vTM,vTR,lfTM,pfTM,lfTrafo,pfTrafo,lfTR,pfTR,lfSR,pfSR,koreksiSR,peakPenyA,peakJurA,nPeny,panjangJTM,rTM,nTrafo,kvaTrafo,nJur,panjangJTR,rTR,nPlg,panjangSR,rSR,inputJTM,panjangRataJTM,nodePeny,fkJTM,corrJTM,targetJTM,bebanTM,iekTM,rugiPuncakJTM,jtm,inputTrafo,kvaRata,bebanTrafo,loading,kvaBucket,loadBucket,persenTrafo,corrTrafo,targetTrafo,gardu,inputJTR,panjangRataJTR,nodeJur,fkJTR,corrJTR,targetJTR,bebanTR,iekTR,rugiPuncakJTR,jtr,inputSR,panjangRataSR,vFasa,corrSR,targetSR,iekSR,rugiPuncakSR,sr,techKwh},
  source_file:file.name
 };
 }
@@ -274,8 +292,8 @@ function renderPreview(d){
  $('pTech').textContent=pc(d.susut_teknis);$('pTechKwh').textContent=fmt(d.susut_teknis_kwh)+' kWh';
  $('pNon').textContent=pc(d.susut_nonteknis);$('pNon').className='val '+(d.susut_nonteknis<=0?'good':'');
  $('pJtm').textContent=pc(d.jtm_persen);$('pGardu').textContent=pc(d.gardu_persen);$('pJtr').textContent=pc(d.jtr_persen);$('pSr').textContent=pc(d.sr_persen);
- const jtmSrc=d.beban_puncak_penyulang!=null&&d.beban_puncak_penyulang>0?`<b>JTM:</b> pakai Beban Puncak Penyulang ${fmt(d.beban_puncak_penyulang)} A`:`<b>JTM:</b> Beban Puncak Penyulang kosong → fallback Energi/LF/PF`;
- const jtrSrc=d.beban_puncak_jurusan!=null&&d.beban_puncak_jurusan>0?`<b>JTR:</b> pakai Beban Puncak Jurusan ${fmt(d.beban_puncak_jurusan)} A`:`<b>JTR:</b> Beban Puncak Jurusan kosong → fallback Energi/LF/PF`;
+ const jtmSrc=`<b>JTM:</b> FORJOG — Energi ÷ (Penyulang × LF × PF × jam)`;
+ const jtrSrc=`<b>JTR:</b> FORJOG — Energi ÷ (Jurusan × LF × PF × jam)`;
  $('calcSource').innerHTML=`${jtmSrc} · ${jtrSrc}<br><b>LF SR:</b> ${fmt(d.lf_sr)} · <b>Faktor Koreksi SR:</b> ${fmt(d.faktor_koreksi_sr)} — mengikuti data upload.`;
  $('preview').classList.add('show');$('saveStatus').textContent='Belum disimpan.';$('preview').scrollIntoView({behavior:'smooth'});
 }
@@ -594,56 +612,100 @@ function calculatePrognosaExact(year,month,dataAsset,neraca,lmLf){
  const hours=new Date(year,month,0).getDate()*24;
  const llf=lf=>(.3*lf)+(.7*lf*lf);
  const safe=(v,fallback)=>Number.isFinite(+v)&&+v!==0?+v:fallback;
+ // Parameter FORJOG — mengikuti workbook Formula Yogyakarta.
  const vTM=safe(ag('tegangan operasi tm'),20.3);
- const vTR=safe(lg('tegangan jtr'),.4);
- const lfTM=safe(lg('lf tm'),safe(ag('faktor beban penyulang[lf]'),.59));
- const pfTM=safe(lg('pf tm'),safe(ag('faktor daya penyulang [pf]'),.99));
- const lfTrafo=safe(lg('lf trafo'),safe(ag('faktor beban trafo[lf]'),.46));
- const pfTrafo=safe(lg('pf trafo'),safe(ag('faktor daya trafo [pf]'),.9));
+ const vTR=safe(lg('tegangan jtr'),.385);
+ const lfTM=safe(lg('lf tm'),safe(ag('faktor beban penyulang[lf]'),.61));
+ const pfTM=safe(lg('pf tm'),safe(ag('faktor daya penyulang [pf]'),.90));
+ const lfTrafo=safe(lg('lf trafo'),safe(ag('faktor beban trafo[lf]'),.45));
+ const pfTrafo=safe(lg('pf trafo'),safe(ag('faktor daya trafo [pf]'),.85));
  const lfTR=safe(lg('lf tr'),safe(ag('faktor beban jtr[lf]'),.42));
  const pfTR=safe(lg('pf jtr'),safe(ag('faktor daya jtr [pf]'),.82));
- const pfSR=safe(lg('pf sr'),safe(ag('faktor daya sr [pf]'),.81));
- const opt=(m,k)=>{const x=m[normLabel(k)];if(!x||x.value==null||x.value==='')return null;const v=optionalNum(x.value);return v==null?null:v};
- const lfSRData=opt(am,'faktor beban sr[lf]');
- const lfSR=(lfSRData!=null&&lfSRData>0)?lfSRData:lfTR;
- const koreksiData=opt(lm,'faktor koreksi sr');
- const koreksiSR=(koreksiData!=null&&koreksiData>0)?koreksiData:1.5;
- const peakPenyA=opt(lm,'beban puncak per penyulang');
- const peakJurA=opt(lm,'beban puncak per jurusan');
+ const pfSR=safe(lg('pf sr'),safe(ag('faktor daya sr [pf]'),.78));
+ const lfSR=safe(lg('lf sr'),safe(ag('faktor beban sr[lf]'),.40));
+ const koreksiSR=safe(lg('faktor koreksi sr'),1.861344537815126);
+ const lmOpt=(...keys)=>{for(const k of keys){const x=lm[normLabel(k)];if(x&&x.value!=null&&x.value!==''){const v=optionalNum(x.value);if(v!=null&&Number.isFinite(+v))return +v}}return null};
+ const corrManualJTM=lmOpt('fk koreksi b.puncak jtm','fk koreksi beban puncak jtm','koreksi beban puncak jtm');
+ const corrManualTrafo=lmOpt('fk koreksi b.puncak trafo','fk koreksi beban puncak trafo','koreksi beban puncak trafo');
+ const corrManualJTR=lmOpt('fk koreksi b.puncak jtr','fk koreksi beban puncak jtr','koreksi beban puncak jtr');
+ const corrManualSR=lmOpt('fk koreksi b.puncak sr','fk koreksi beban puncak sr','koreksi beban puncak sr');
+ const targetJTM=lmOpt('target simple s jtm','simple s jtm kwh');
+ const targetTrafo=lmOpt('target simple s trafo','simple s trafo kwh','target simple s gardu');
+ const targetJTR=lmOpt('target simple s jtr','simple s jtr kwh');
+ const targetSR=lmOpt('target simple s sr','simple s sr kwh');
+ // Tetap dibaca agar template lama kompatibel, tetapi dalam mode FORJOG beban puncak dihitung dari Energi/LF/PF.
+ const peakPenyA=lmOpt('beban puncak per penyulang');
+ const peakJurA=lmOpt('beban puncak per jurusan');
+
  const nPeny=safe(ag('jumlah penyulang'),1), panjangJTM=safe(ag('jaringan tegangan menengah [jtm]'),0), rTM=safe(ag('rek tm'),0);
  const nTrafo=safe(ag('jumlah trafo'),1), kvaTrafo=safe(ag('jumlah kva'),1), rugiBesi=safe(ag('inti trafo'),0), rugiTembaga=safe(ag('belitan trafo'),0);
  const nJur=safe(ag('jumlah jurusan'),1), panjangJTR=safe(ag('jaringan tegangan rendah [jtr]'),0), rTR=safe(ag('rek tr'),0);
  const nPlg=safe(ag('jumlah pelanggan'),1), panjangSR=safe(ag('sambungan rumah'),0), rSR=safe(ag('rek sr'),0);
+
+ // 1) JTM — Formula Jogja E21:E30. Koreksi B.Puncak = sel Goal Seek FORJOG.
  const inputJTM=masuk-tt-kirim;
  const panjangRataJTM=panjangJTM/nPeny, nodePeny=Math.ceil(nTrafo/nPeny);
  const fkJTM=panjangRataJTM<=15?1:Math.max(.3,.91-((panjangRataJTM-15)/panjangRataJTM)*.75);
- const bebanTM=(peakPenyA!=null&&peakPenyA>0)?(1.732*vTM*peakPenyA):(inputJTM/(nPeny*lfTM*pfTM*hours));
- const iekTM=Math.sqrt((bebanTM* bebanTM + bebanTM* bebanTM/nodePeny + Math.pow(bebanTM/nodePeny,2))/3);
- const rugiPuncakJTM=3*Math.pow(iekTM/(1.732*vTM),2)*(rTM/1000)*panjangRataJTM*fkJTM;
- const jtm=nPeny*rugiPuncakJTM*llf(lfTM)*hours;
+ const bebanTM=inputJTM/(nPeny*lfTM*pfTM*hours);
+ const iekTMBase=Math.sqrt((bebanTM*bebanTM+bebanTM*(bebanTM/nodePeny)+Math.pow(bebanTM/nodePeny,2))/3);
+ const rugiPuncakJTMBase=3*Math.pow(iekTMBase/(1.732*vTM),2)*(rTM/1000)*panjangRataJTM*fkJTM;
+ const jtmBase=nPeny*rugiPuncakJTMBase*llf(lfTM)*hours;
+ const corrJTM=(corrManualJTM!=null&&corrManualJTM>0)?corrManualJTM:((targetJTM!=null&&targetJTM>0&&jtmBase>0)?Math.sqrt(targetJTM/jtmBase):1);
+ const iekTM=iekTMBase*corrJTM;
+ const rugiPuncakJTM=rugiPuncakJTMBase*corrJTM*corrJTM;
+ const jtm=jtmBase*corrJTM*corrJTM;
+
+ // 2) Gardu/Trafo — lookup tabel pembebanan Formula Jogja (ekuivalen sel G/H26:G/H30).
  const inputTrafo=inputJTM-jtm-tm, kvaRata=kvaTrafo/nTrafo, bebanTrafo=inputTrafo/(nTrafo*pfTrafo*hours), loading=bebanTrafo/kvaRata;
  const kvaBucket=kvaRata>900?1000:kvaRata>700?800:kvaRata>550?630:kvaRata>450?500:kvaRata>350?400:kvaRata>275?315:kvaRata>225?250:kvaRata>180?200:kvaRata>130?160:kvaRata>75?100:kvaRata>35?50:kvaRata>10?25:25;
  const loadBucket=loading>.9?1.1:loading>.8?.9:loading>.7?.8:loading>.6?.7:loading>.5?.6:loading>.4?.5:loading>.3?.4:loading>.2?.3:loading>.1?.2:.1;
- const trafoTable={'.1':{25:4.91,50:4.90,100:4.90,160:4.08,200:3.92,250:3.92,315:3.99,400:3.79,500:3.59,630:3.37,800:3.57,1000:3.76},'.2':{25:2.70,50:2.68,100:2.68,160:2.22,200:2.14,250:2.13,315:2.17,400:2.06,500:1.95,630:1.83,800:1.95,1000:2.05},'.3':{25:2.08,50:2.05,100:2.05,160:1.68,200:1.63,250:1.61,315:1.65,400:1.56,500:1.48,630:1.39,800:1.48,1000:1.56},'.4':{25:1.84,50:1.81,100:1.81,160:1.47,200:1.43,250:1.41,315:1.45,400:1.36,500:1.30,630:1.22,800:1.30,1000:1.38},'.5':{25:1.77,50:1.72,100:1.72,160:1.39,200:1.36,250:1.34,315:1.37,400:1.29,500:1.23,630:1.15,800:1.24,1000:1.31},'.6':{25:1.78,50:1.72,100:1.72,160:1.38,200:1.36,250:1.33,315:1.36,400:1.28,500:1.22,630:1.14,800:1.24,1000:1.31},'.7':{25:1.83,50:1.76,100:1.76,160:1.41,200:1.39,250:1.35,315:1.39,400:1.30,500:1.24,630:1.16,800:1.26,1000:1.34},'.8':{25:1.91,50:1.83,100:1.83,160:1.46,200:1.44,250:1.40,315:1.44,400:1.35,500:1.28,630:1.20,800:1.31,1000:1.39},'.9':{25:2.00,50:1.92,100:1.92,160:1.53,200:1.51,250:1.46,315:1.51,400:1.41,500:1.34,630:1.26,800:1.37,1000:1.46},'1':{25:2.12,50:2.02,100:2.02,160:1.60,200:1.59,250:1.54,315:1.58,400:1.48,500:1.41,630:1.32,800:1.44,1000:1.53},'1.1':{25:2.24,50:2.13,100:2.13,160:1.69,200:1.67,250:1.62,315:1.67,400:1.56,500:1.48,630:1.39,800:1.52,1000:1.62}};
+ const trafoTable={
+  '.1':{25:4.91,50:4.90,100:4.90,160:4.08,200:3.92,250:3.92,315:3.99,400:3.79,500:3.59,630:3.37,800:3.57,1000:3.76},
+  '.2':{25:2.70,50:2.68,100:2.68,160:2.22,200:2.14,250:2.13,315:2.17,400:2.06,500:1.95,630:1.83,800:1.95,1000:2.05},
+  '.3':{25:2.08,50:2.05,100:2.05,160:1.68,200:1.63,250:1.61,315:1.65,400:1.56,500:1.48,630:1.39,800:1.48,1000:1.56},
+  '.4':{25:1.84,50:1.81,100:1.81,160:1.47,200:1.43,250:1.41,315:1.45,400:1.36,500:1.30,630:1.22,800:1.30,1000:1.38},
+  '.5':{25:1.77,50:1.72,100:1.72,160:1.39,200:1.36,250:1.34,315:1.37,400:1.29,500:1.23,630:1.15,800:1.24,1000:1.31},
+  '.6':{25:1.78,50:1.72,100:1.72,160:1.38,200:1.36,250:1.33,315:1.36,400:1.28,500:1.22,630:1.14,800:1.24,1000:1.31},
+  '.7':{25:1.83,50:1.76,100:1.76,160:1.41,200:1.39,250:1.35,315:1.39,400:1.30,500:1.24,630:1.16,800:1.26,1000:1.34},
+  '.8':{25:1.91,50:1.83,100:1.83,160:1.46,200:1.44,250:1.40,315:1.44,400:1.35,500:1.28,630:1.20,800:1.31,1000:1.39},
+  '.9':{25:2.00,50:1.92,100:1.92,160:1.53,200:1.51,250:1.46,315:1.51,400:1.41,500:1.34,630:1.26,800:1.37,1000:1.46},
+  '1':{25:2.12,50:2.02,100:2.02,160:1.60,200:1.59,250:1.54,315:1.58,400:1.48,500:1.41,630:1.32,800:1.44,1000:1.53},
+  '1.1':{25:2.24,50:2.13,100:2.13,160:1.69,200:1.67,250:1.62,315:1.67,400:1.56,500:1.48,630:1.39,800:1.52,1000:1.62}
+ };
  const loadKey=String(loadBucket).replace(/^0/,'');
  const persenTrafo=(trafoTable[loadKey]||trafoTable['.5'])[kvaBucket];
- const gardu=inputTrafo*(persenTrafo/100);
+ const garduBase=inputTrafo*(persenTrafo/100);
+ const corrTrafo=(corrManualTrafo!=null&&corrManualTrafo>0)?corrManualTrafo:((targetTrafo!=null&&targetTrafo>0&&garduBase>0)?targetTrafo/garduBase:1);
+ const gardu=garduBase*corrTrafo;
+
+ // 3) JTR — Formula Jogja I/J21:I/J30. FK JTR kembali formula panjang asli; bukan angka kalibrasi 0,96.
  const inputJTR=inputTrafo-gardu-sendiri, panjangRataJTR=panjangJTR/nJur, nodeJur=Math.ceil(panjangRataJTR/.05);
  const fkJTR=panjangRataJTR<=.1?.65:panjangRataJTR>=2?1:1-(2-panjangRataJTR)*.368421052631579/(2+.1-panjangRataJTR);
- const bebanTR=(peakJurA!=null&&peakJurA>0)?(1.732*vTR*peakJurA):(inputJTR/(nJur*lfTR*pfTR*hours));
- const iekTR=Math.sqrt((bebanTR*bebanTR+bebanTR*bebanTR/nodeJur+Math.pow(bebanTR/nodeJur,2))/3);
- const rugiPuncakJTR=3*Math.pow(iekTR/(1.732*vTR),2)*(rTR/1000)*panjangRataJTR*fkJTR;
- const jtr=nJur*rugiPuncakJTR*llf(lfTR)*hours;
+ const bebanTR=inputJTR/(nJur*lfTR*pfTR*hours);
+ const iekTRBase=Math.sqrt((bebanTR*bebanTR+bebanTR*(bebanTR/nodeJur)+Math.pow(bebanTR/nodeJur,2))/3);
+ const rugiPuncakJTRBase=3*Math.pow(iekTRBase/(1.732*vTR),2)*(rTR/1000)*panjangRataJTR*fkJTR;
+ const jtrBase=nJur*rugiPuncakJTRBase*llf(lfTR)*hours;
+ const corrJTR=(corrManualJTR!=null&&corrManualJTR>0)?corrManualJTR:((targetJTR!=null&&targetJTR>0&&jtrBase>0)?Math.sqrt(targetJTR/jtrBase):1);
+ const iekTR=iekTRBase*corrJTR;
+ const rugiPuncakJTR=rugiPuncakJTRBase*corrJTR*corrJTR;
+ const jtr=jtrBase*corrJTR*corrJTR;
+
+ // 4) SR — Formula Jogja K/L21:K/L30 + rugi meter 1 W/pelanggan.
  const inputSR=inputJTR-jtr, panjangRataSR=panjangSR/nPlg, vFasa=vTR/Math.sqrt(3);
- const iekSR=inputSR/(nPlg*lfSR*pfSR*hours);
- const rugiPuncakSR=(2*(rSR/1000)*panjangRataSR*Math.pow(iekSR/vFasa,2))*koreksiSR;
- const sr=(nPlg*rugiPuncakSR*hours)+(nPlg*hours/1000);
+ const iekSRBase=inputSR/(nPlg*lfSR*pfSR*hours);
+ const rugiPuncakSRBase=(2*(rSR/1000)*panjangRataSR*Math.pow(iekSRBase/vFasa,2))*koreksiSR;
+ const srVarBase=nPlg*rugiPuncakSRBase*hours, srMeter=nPlg*hours/1000;
+ const corrSR=(corrManualSR!=null&&corrManualSR>0)?corrManualSR:((targetSR!=null&&targetSR>srMeter&&srVarBase>0)?Math.sqrt((targetSR-srMeter)/srVarBase):1);
+ const iekSR=iekSRBase*corrSR;
+ const rugiPuncakSR=rugiPuncakSRBase*corrSR*corrSR;
+ const sr=srVarBase*corrSR*corrSR+srMeter;
+
  const techKwh=jtm+gardu+jtr+sr,tech=techKwh/masuk*100,non=dist-tech,p2tlPoin=p2tl/masuk*100;
- return {tahun:year,bulan:month,penerimaan,terima_unit_lain:terima,jual_tt:tt,jual_tm:tm,jual_tr:tr,kirim_unit_lain:kirim,pemakaian_sendiri:sendiri,emin_tt:eminTT,emin_tm:eminTM,emin_tr:eminTR,energi_masuk:masuk,susut_distribusi:dist,susut_distribusi_kwh:loss,susut_teknis:tech,susut_teknis_kwh:techKwh,susut_nonteknis:non,jtm_persen:jtm/masuk*100,jtm_kwh:jtm,gardu_persen:gardu/masuk*100,gardu_kwh:gardu,jtr_persen:jtr/masuk*100,jtr_kwh:jtr,sr_persen:sr/masuk*100,sr_kwh:sr,p2tl_kwh:p2tl,p2tl_poin:p2tlPoin,nonteknis_tanpa_p2tl:non+p2tlPoin,lf_tm:lfTM,pf_tm:pfTM,lf_trafo:lfTrafo,pf_trafo:pfTrafo,lf_tr:lfTR,pf_jtr:pfTR,pf_sr:pfSR,lf_sr:lfSR,faktor_koreksi_sr:koreksiSR,beban_puncak_penyulang:peakPenyA,beban_puncak_jurusan:peakJurA,sumber_beban_jtm:(peakPenyA!=null&&peakPenyA>0)?'Beban Puncak Penyulang (LM-LF)':'Fallback Energi/LF/PF',sumber_beban_jtr:(peakJurA!=null&&peakJurA>0)?'Beban Puncak Jurusan (LM-LF)':'Fallback Energi/LF/PF',beban_tm:bebanTM,beban_tr:bebanTR,_bedah:{hours,vTM,vTR,lfTM,pfTM,lfTrafo,pfTrafo,lfTR,pfTR,lfSR,pfSR,koreksiSR,peakPenyA,peakJurA,nPeny,panjangJTM,rTM,nTrafo,kvaTrafo,nJur,panjangJTR,rTR,nPlg,panjangSR,rSR,inputJTM,panjangRataJTM,nodePeny,fkJTM,bebanTM,iekTM,rugiPuncakJTM,jtm,inputTrafo,kvaRata,bebanTrafo,loading,kvaBucket,loadBucket,persenTrafo,gardu,inputJTR,panjangRataJTR,nodeJur,fkJTR,bebanTR,iekTR,rugiPuncakJTR,jtr,inputSR,panjangRataSR,vFasa,iekSR,rugiPuncakSR,sr,techKwh}};
+ return {tahun:year,bulan:month,penerimaan,terima_unit_lain:terima,jual_tt:tt,jual_tm:tm,jual_tr:tr,kirim_unit_lain:kirim,pemakaian_sendiri:sendiri,emin_tt:eminTT,emin_tm:eminTM,emin_tr:eminTR,energi_masuk:masuk,susut_distribusi:dist,susut_distribusi_kwh:loss,susut_teknis:tech,susut_teknis_kwh:techKwh,susut_nonteknis:non,jtm_persen:jtm/masuk*100,jtm_kwh:jtm,gardu_persen:gardu/masuk*100,gardu_kwh:gardu,jtr_persen:jtr/masuk*100,jtr_kwh:jtr,sr_persen:sr/masuk*100,sr_kwh:sr,p2tl_kwh:p2tl,p2tl_poin:p2tlPoin,nonteknis_tanpa_p2tl:non+p2tlPoin,lf_tm:lfTM,pf_tm:pfTM,lf_trafo:lfTrafo,pf_trafo:pfTrafo,lf_tr:lfTR,pf_jtr:pfTR,pf_sr:pfSR,lf_sr:lfSR,faktor_koreksi_sr:koreksiSR,beban_puncak_penyulang:peakPenyA,beban_puncak_jurusan:peakJurA,sumber_beban_jtm:'FORJOG: Energi / (Penyulang × LF × PF × Jam)',sumber_beban_jtr:'FORJOG: Energi / (Jurusan × LF × PF × Jam)',beban_tm:bebanTM,beban_tr:bebanTR,_bedah:{hours,vTM,vTR,lfTM,pfTM,lfTrafo,pfTrafo,lfTR,pfTR,lfSR,pfSR,koreksiSR,peakPenyA,peakJurA,nPeny,panjangJTM,rTM,nTrafo,kvaTrafo,nJur,panjangJTR,rTR,nPlg,panjangSR,rSR,inputJTM,panjangRataJTM,nodePeny,fkJTM,corrJTM,targetJTM,bebanTM,iekTM,rugiPuncakJTM,jtm,inputTrafo,kvaRata,bebanTrafo,loading,kvaBucket,loadBucket,persenTrafo,corrTrafo,targetTrafo,gardu,inputJTR,panjangRataJTR,nodeJur,fkJTR,corrJTR,targetJTR,bebanTR,iekTR,rugiPuncakJTR,jtr,inputSR,panjangRataSR,vFasa,corrSR,targetSR,iekSR,rugiPuncakSR,sr,techKwh}};
 }
 function resultDelta(a,b){const d=(Number(b)||0)-(Number(a)||0),cl=Math.abs(d)<.005?'neutral':d<0?'good':'bad';return `<div class="delta ${cl}">${d>0?'+':''}${fmt(d)} pp</div>`}
 function renderProgResult(actual,h,target){
- $('progResult').innerHTML=`<div class="card"><h3 style="margin-top:0">Hasil Prognosa · ${MONTHS[target.bulan-1]} ${target.tahun}</h3><p class="desc">Perbandingan aktual terakhir vs hasil H+1. Mesin menggunakan logika yang sama dengan Excel terakhir: LM-LF dari data, LF SR dari Data Asset/fallback LF TR, serta beban puncak aktual bila tersedia.</p><div class="result-grid" style="margin-top:14px"><div class="result-card"><small>SUSUT DISTRIBUSI</small><b>${pc(h.susut_distribusi)}</b><div class="desc">${fmt(h.susut_distribusi_kwh)} kWh</div>${resultDelta(actual.susut_distribusi,h.susut_distribusi)}</div><div class="result-card"><small>SUSUT TEKNIS</small><b>${pc(h.susut_teknis)}</b><div class="desc">${fmt(h.susut_teknis_kwh)} kWh</div>${resultDelta(actual.susut_teknis,h.susut_teknis)}</div><div class="result-card"><small>SUSUT NONTEKNIS</small><b>${pc(h.susut_nonteknis)}</b><div class="desc">${fmt(h.susut_distribusi_kwh-h.susut_teknis_kwh)} kWh</div>${resultDelta(actual.susut_nonteknis,h.susut_nonteknis)}</div></div><div class="result-components"><div class="result-card"><small>JTM</small><b>${pc(h.jtm_persen)}</b><div class="desc">${fmt(h.jtm_kwh)} kWh</div></div><div class="result-card"><small>GARDU</small><b>${pc(h.gardu_persen)}</b><div class="desc">${fmt(h.gardu_kwh)} kWh</div></div><div class="result-card"><small>JTR</small><b>${pc(h.jtr_persen)}</b><div class="desc">${fmt(h.jtr_kwh)} kWh</div></div><div class="result-card"><small>SR</small><b>${pc(h.sr_persen)}</b><div class="desc">${fmt(h.sr_kwh)} kWh</div></div></div><div class="notice" style="margin-top:14px"><b>JTM:</b> ${escapeHTML(h.sumber_beban_jtm)}${h.beban_puncak_penyulang?` · ${fmt(h.beban_puncak_penyulang)} A`:''} &nbsp; | &nbsp; <b>JTR:</b> ${escapeHTML(h.sumber_beban_jtr)}${h.beban_puncak_jurusan?` · ${fmt(h.beban_puncak_jurusan)} A`:''}<br><b>LF SR:</b> ${fmt(h.lf_sr)} &nbsp; · &nbsp; <b>Faktor Koreksi SR:</b> ${fmt(h.faktor_koreksi_sr)}</div></div>`;
+ $('progResult').innerHTML=`<div class="card"><h3 style="margin-top:0">Hasil Prognosa · ${MONTHS[target.bulan-1]} ${target.tahun}</h3><p class="desc">Perbandingan aktual terakhir vs hasil H+1. Mesin sudah sama dengan V3 / FORJOG: JTM/JTR dari Energi/LF/PF, LF SR dari LM-LF/Data Asset dengan fallback 0,40, dan Beban Puncak hanya informasi.</p><div class="result-grid" style="margin-top:14px"><div class="result-card"><small>SUSUT DISTRIBUSI</small><b>${pc(h.susut_distribusi)}</b><div class="desc">${fmt(h.susut_distribusi_kwh)} kWh</div>${resultDelta(actual.susut_distribusi,h.susut_distribusi)}</div><div class="result-card"><small>SUSUT TEKNIS</small><b>${pc(h.susut_teknis)}</b><div class="desc">${fmt(h.susut_teknis_kwh)} kWh</div>${resultDelta(actual.susut_teknis,h.susut_teknis)}</div><div class="result-card"><small>SUSUT NONTEKNIS</small><b>${pc(h.susut_nonteknis)}</b><div class="desc">${fmt(h.susut_distribusi_kwh-h.susut_teknis_kwh)} kWh</div>${resultDelta(actual.susut_nonteknis,h.susut_nonteknis)}</div></div><div class="result-components"><div class="result-card"><small>JTM</small><b>${pc(h.jtm_persen)}</b><div class="desc">${fmt(h.jtm_kwh)} kWh</div></div><div class="result-card"><small>GARDU</small><b>${pc(h.gardu_persen)}</b><div class="desc">${fmt(h.gardu_kwh)} kWh</div></div><div class="result-card"><small>JTR</small><b>${pc(h.jtr_persen)}</b><div class="desc">${fmt(h.jtr_kwh)} kWh</div></div><div class="result-card"><small>SR</small><b>${pc(h.sr_persen)}</b><div class="desc">${fmt(h.sr_kwh)} kWh</div></div></div><div class="notice" style="margin-top:14px"><b>JTM:</b> ${escapeHTML(h.sumber_beban_jtm)}${h.beban_puncak_penyulang?` · ${fmt(h.beban_puncak_penyulang)} A`:''} &nbsp; | &nbsp; <b>JTR:</b> ${escapeHTML(h.sumber_beban_jtr)}${h.beban_puncak_jurusan?` · ${fmt(h.beban_puncak_jurusan)} A`:''}<br><b>LF SR:</b> ${fmt(h.lf_sr)} &nbsp; · &nbsp; <b>Faktor Koreksi SR:</b> ${fmt(h.faktor_koreksi_sr)}</div></div>`;
 }
 async function savePrognosa(){
  if(!progState||!progResult)return;
@@ -685,7 +747,7 @@ function bedahRows(d){
   ['Tegangan Operasi TM',b.vTM,'kV','Data Asset'],['Tegangan JTR',b.vTR,'kV','LM-LF'],
   ['LF TM',b.lfTM,'-','LM-LF'],['PF TM',b.pfTM,'-','LM-LF'],['LF Trafo',b.lfTrafo,'-','LM-LF'],['PF Trafo',b.pfTrafo,'-','LM-LF'],
   ['LF TR',b.lfTR,'-','LM-LF'],['PF JTR',b.pfTR,'-','LM-LF'],['PF SR',b.pfSR,'-','LM-LF'],
-  ['LF SR',b.lfSR,'-','Data Asset FAKTOR BEBAN SR[LF]; kosong → LF TR'],['Faktor Koreksi SR',b.koreksiSR,'-','LM-LF'],
+  ['LF SR',b.lfSR,'-','LM-LF / Data Asset; kosong → 0,40 (V3)'],['Faktor Koreksi SR',b.koreksiSR,'-','LM-LF'],
   ['Beban Puncak / Penyulang',b.peakPenyA,'A',d.sumber_beban_jtm],['Beban Puncak / Jurusan',b.peakJurA,'A',d.sumber_beban_jtr],[],
   ['JTM — Parameter','Nilai','Satuan','Rumus'],
   ['Input JTM',b.inputJTM,'kWh','Energi Masuk - TT - Kirim'],['Panjang rata JTM',b.panjangRataJTM,'km/penyulang','JTM / Jumlah Penyulang'],['Node / Penyulang',b.nodePeny,'node','CEILING(Trafo/Penyulang)'],['Faktor Koreksi JTM',b.fkJTM,'-','Formula Jogja'],
